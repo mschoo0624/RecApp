@@ -1,25 +1,22 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Animated} from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, Animated } from "react-native";
 import React, { useState } from "react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [isFocused, setIsFocused] = useState<{ email: boolean; password: boolean }>({
-    email: false,
-    password: false,
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isFocused, setIsFocused] = useState({ email: false, password: false });
   const [loginScale] = useState(new Animated.Value(1));
   const [uicScale] = useState(new Animated.Value(1));
 
-  const handleFocus = (field: "email" | "password") => {
+  const handleFocus = (field) => {
     setIsFocused({ ...isFocused, [field]: true });
   };
 
-  const handleBlur = (field: "email" | "password") => {
+  const handleBlur = (field) => {
     setIsFocused({ ...isFocused, [field]: false });
   };
 
-  const animateScale = (scale: Animated.Value, value: number) => {
+  const animateScale = (scale, value) => {
     Animated.spring(scale, {
       toValue: value,
       useNativeDriver: true,
