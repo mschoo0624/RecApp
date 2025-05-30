@@ -1,20 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { View, ActivityIndicator } from "react-native";
+import { NavigationContainer } from "@react-navigation/native"; // ✅ You forgot this
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../lib/firebaseConfig"; 
+import { auth } from "../lib/firebaseConfig";
 
 // Screens
 import LoginScreen from "./Screens/LogInPage";
-
-// Placeholder home screen
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, backgroundColor: "#000", justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ color: "#FFF", fontSize: 24 }}>Welcome to RecApp!</Text>
-    </View>
-  );
-}
+import HomeScreen from "./Screens/HomeScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -31,10 +24,16 @@ export default function AppNavigator() {
     return unsubscribe;
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0066CC" />
+      </View>
+    );
+  }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer> {/* ✅ Wrap navigator here */}
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="Home" component={HomeScreen} />
