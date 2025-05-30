@@ -1,20 +1,24 @@
 import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig"; 
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigation = useNavigation(); // Get the navigation object
 
   const handleLogin = async () => {
     if (!email.endsWith("@uic.edu")) {
       Alert.alert("Error", "Only @uic.edu emails are allowed");
+      console.log("Debugging: TryAgain!!!");
       return;
     }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      console.log("Debugging: Success!!!");
       // User is now signed in
     } catch (error) {
       Alert.alert("Login Failed", error.message);
@@ -46,6 +50,16 @@ export default function LoginScreen() {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("SignUp"); // Navigate to the SignUp page
+        }}
+      >
+        <Text style={{ color: "#0066CC", textAlign: "center", marginTop: 16 }}>
+          Don't have an account? Sign Up
+        </Text>
       </TouchableOpacity>
     </View>
   );

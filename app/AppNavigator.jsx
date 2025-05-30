@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import { NavigationContainer } from "@react-navigation/native"; // ✅ You forgot this
+import { NavigationContainer } from "@react-navigation/native"; 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../lib/firebaseConfig";
@@ -8,6 +8,7 @@ import { auth } from "../lib/firebaseConfig";
 // Screens
 import LoginScreen from "./Screens/LogInPage";
 import HomeScreen from "./Screens/HomeScreen";
+import SignUpPage from "./Screens/SignUpPage"; // Import SignUpPage
 
 const Stack = createNativeStackNavigator();
 
@@ -33,12 +34,15 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer> {/* ✅ Wrap navigator here */}
+    <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="Home" component={HomeScreen} />
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="SignUp" component={SignUpPage} /> 
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

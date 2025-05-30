@@ -1,10 +1,25 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { signOut } from "firebase/auth";
+import { auth } from "../../lib/firebaseConfig";
 
 export default function HomeScreen() {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out the user
+      Alert.alert("Success", "You have been logged out.");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Welcome to the Home Screen!</Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Log Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -20,5 +35,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#FF3B30",
+    borderRadius: 12,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  buttonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
