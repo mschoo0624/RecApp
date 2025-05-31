@@ -11,8 +11,8 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.endsWith("@uic.edu")) {
-      Alert.alert("Error", "Only @uic.edu emails are allowed");
       console.log("Debugging: TryAgain!!!");
+      Alert.alert("Error", "Only @uic.edu emails are allowed");
       return;
     }
 

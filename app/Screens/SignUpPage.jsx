@@ -2,31 +2,45 @@ import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig";
+import { useNavigation } from "@react-navigation/native"; // Added
 
 export default function SignUpPage() {
+  const navigation = useNavigation(); // added
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState(""); // Added state for full name
+  const [phoneNumber, setPhoneNumber] = useState(""); // Added state for phone number
 
   const handleSignUp = async () => {
     if (!email.endsWith("@uic.edu")) {
-      Alert.alert("Error", "Only @uic.edu emails are allowed");
-      console.log("Debugging: Try Again!!!");
+      console.log("Error", "Only @uic.edu emails are allowed");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      console.log("Error", "Passwords do not match");
+      return;
+    }
+
+    if (!fullName.trim()) {
+      console.log("Error", "Full Name is required");
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      console.log("Error", "Phone Number is required");
       return;
     }
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      Alert.alert("Success", "Account created successfully!");
-      console.log("Debugging: Success!!!");
-      // Navigate to the login screen or home screen after successful sign-up
+      console.log("Success", "Account created successfully!");
+
+      // Navigate to the Survey page after successful sign-up
+      navigation.navigate("Survey");
     } catch (error) {
-      Alert.alert("Sign Up Failed", error.message);
+      console.log("Sign Up Failed", error.message);
     }
   };
 
@@ -34,6 +48,26 @@ export default function SignUpPage() {
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
 
+      {/* Full Name Input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        placeholderTextColor="#999"
+        value={fullName}
+        onChangeText={setFullName}
+      />
+
+      {/* Phone Number Input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        placeholderTextColor="#999"
+        keyboardType="phone-pad"
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
+      />
+
+      {/* Email Input */}
       <TextInput
         style={styles.input}
         placeholder="UIC Email"
@@ -44,6 +78,7 @@ export default function SignUpPage() {
         onChangeText={setEmail}
       />
 
+      {/* Password Input */}
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -53,6 +88,7 @@ export default function SignUpPage() {
         onChangeText={setPassword}
       />
 
+      {/* Confirm Password Input */}
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
@@ -62,6 +98,7 @@ export default function SignUpPage() {
         onChangeText={setConfirmPassword}
       />
 
+      {/* Sign Up Button */}
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
