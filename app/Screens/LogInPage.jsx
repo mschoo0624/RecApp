@@ -8,21 +8,22 @@ import { auth, db } from "../../lib/firebaseConfig";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigation = useNavigation();
+  const navigation = useNavigation(); // Initialize navigation hook for screen transitions.
 
   const handleLogin = async () => {
     if (!email.endsWith("@uic.edu")) {
       Alert.alert("Error", "Only @uic.edu emails are allowed");
+      console.log("Debugging: ERORR!!!");
       return;
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password); // make sure the user is signed up
       const user = userCredential.user;
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userDoc = await getDoc(doc(db, "users", user.uid)); // line fetches a user's document from Firestore
 
-      if (!userDoc.exists()) {
+      if (!userDoc.exists()) { 
         Alert.alert("No account found", "Please sign up first.");
         await auth.signOut();
         return;
@@ -31,7 +32,9 @@ export default function LoginScreen() {
       if (userDoc.data().surveyCompleted) {
         navigation.navigate("Home");
       } else {
-        navigation.navigate("SurveyPage1");
+        // navigation.navigate("SurveyPage1");
+        Alert.alert("Debugging You should Sign Up first!!!");
+        return;
       }
     } catch (error) {
       Alert.alert("Login Failed", error.message);

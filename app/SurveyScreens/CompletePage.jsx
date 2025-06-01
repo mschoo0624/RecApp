@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 
 export default function SurveyComplete() {
   const navigation = useNavigation();
-
+  // Showing survey completed only for 3000 m/s.
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.navigate("Home");

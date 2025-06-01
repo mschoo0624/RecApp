@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../lib/firebaseConfig";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { auth, db } from "../../lib/firebaseConfig";
 
 // Screens
-import LoginScreen from "./Screens/LogInPage";
-import SignUpPage from "./Screens/SignUpPage";
-import SurveyPage1 from "./SurveyScreens/Survey1";
-import SurveyPage2 from "./SurveyScreens/Survey2";
-import SurveyPage3 from "./SurveyScreens/Survey3";
-import SurveyComplete from "./SurveyScreens/CompletePage";
-import HomeScreen from "./Screens/HomeScreen";
+import HomeScreen from "../MainScreen/HomeScreen";
+import LoginScreen from "../Screens/LogInPage";
+import SignUpPage from "../Screens/SignUpPage";
+import SurveyComplete from "../SurveyScreens/CompletePage";
+import SurveyPage1 from "../SurveyScreens/Survey1";
+import SurveyPage2 from "../SurveyScreens/Survey2";
+import SurveyPage3 from "../SurveyScreens/Survey3";
+
+import DrawerNavigator from "./DrawerNavigator"; // need to replace with the homescreen 
 
 const Stack = createNativeStackNavigator();
 
@@ -65,14 +67,14 @@ export default function AppNavigator() {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpPage} />
           </>
+        ) : user.surveyCompleted ? (
+          <Stack.Screen name="Home" component={HomeScreen} />
         ) : (
           <>
-            {/* Onboarding Flow */}
             <Stack.Screen name="SurveyPage1" component={SurveyPage1} />
             <Stack.Screen name="SurveyPage2" component={SurveyPage2} />
             <Stack.Screen name="SurveyPage3" component={SurveyPage3} />
             <Stack.Screen name="SurveyComplete" component={SurveyComplete} />
-            {/* Main App */}
             <Stack.Screen name="Home" component={HomeScreen} />
           </>
         )}

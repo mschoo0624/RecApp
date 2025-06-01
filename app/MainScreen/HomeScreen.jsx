@@ -1,7 +1,13 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView
+} from "react-native";
 import { signOut } from "firebase/auth";
-import { auth } from "../../lib/firebaseConfig";
+import { auth, db } from "../../lib/firebaseConfig";
 
 export default function HomeScreen() {
   const handleLogout = async () => {

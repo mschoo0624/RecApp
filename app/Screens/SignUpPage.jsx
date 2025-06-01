@@ -34,7 +34,7 @@ export default function SignUpPage() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password); // Creates a new user account.
       console.log("Success", "Account created successfully!");
 
       // Navigate to the Survey page after successful sign-up
