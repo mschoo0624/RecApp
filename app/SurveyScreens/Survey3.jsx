@@ -27,12 +27,14 @@ export default function SurveyPage3() {
   const { age, weight, gymLevel, sports } = route.params;
   const [selectedGoal, setSelectedGoal] = useState("");
 
+  // At least one of the goal options should be selected.
   const handleFinish = async () => {
     if (!selectedGoal) {
       Alert.alert("Missing info", "Please select a workout goal.");
       return;
     }
 
+    // Checks whether there is a currently authenticated user in Firebase Authentication.
     const user = auth.currentUser;
     if (!user) {
       Alert.alert("Error", "User not logged in.");
@@ -40,6 +42,7 @@ export default function SurveyPage3() {
     }
 
     try {
+      // Save or update data in Firebase Firestore under unique users.
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         preferences: {
@@ -49,11 +52,11 @@ export default function SurveyPage3() {
           sports,
           workoutGoal: selectedGoal,
         },
+        surveyCompleted: true, // Add this flag
         createdAt: new Date(),
       });
 
       navigation.navigate("SurveyComplete");
-
     } catch (error) {
       console.error("Error saving to Firestore:", error);
       Alert.alert("Error", "Could not save your data.");

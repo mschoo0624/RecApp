@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../lib/firebaseConfig";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../lib/firebaseConfig";
 
 // Screens
 import LoginScreen from "./Screens/LogInPage";
@@ -11,7 +12,7 @@ import SignUpPage from "./Screens/SignUpPage";
 import SurveyPage1 from "./SurveyScreens/Survey1";
 import SurveyPage2 from "./SurveyScreens/Survey2";
 import SurveyPage3 from "./SurveyScreens/Survey3";
-import SurveyComplete from "./SurveyScreens/CompletePage"; // ✅ Add this
+import SurveyComplete from "./SurveyScreens/CompletePage";
 import HomeScreen from "./Screens/HomeScreen";
 
 const Stack = createNativeStackNavigator();
@@ -21,8 +22,27 @@ export default function AppNavigator() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    signOut(auth);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+
+        if (userDoc.exists() && userDoc.data().surveyCompleted) {
+          setUser({ ...firebaseUser, surveyCompleted: true });
+        } else {
+          setUser({ ...firebaseUser, surveyCompleted: false });
+        }
+      } catch (err) {
+        console.error("Error checking Firestore:", err);
+        setUser(null);
+      }
+
       setLoading(false);
     });
 

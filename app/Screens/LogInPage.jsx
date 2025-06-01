@@ -1,25 +1,38 @@
 import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import { useNavigation } from "@react-navigation/native";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebaseConfig"; 
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebaseConfig";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigation = useNavigation(); // Get the navigation object
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     if (!email.endsWith("@uic.edu")) {
-      console.log("Debugging: TryAgain!!!");
       Alert.alert("Error", "Only @uic.edu emails are allowed");
       return;
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Debugging: Success!!!");
-      // User is now signed in
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (!userDoc.exists()) {
+        Alert.alert("No account found", "Please sign up first.");
+        await auth.signOut();
+        return;
+      }
+
+      if (userDoc.data().surveyCompleted) {
+        navigation.navigate("Home");
+      } else {
+        navigation.navigate("SurveyPage1");
+      }
     } catch (error) {
       Alert.alert("Login Failed", error.message);
     }
@@ -54,7 +67,7 @@ export default function LoginScreen() {
 
       <TouchableOpacity
         onPress={() => {
-          navigation.navigate("SignUp"); // Navigate to the SignUp page
+          navigation.navigate("SignUp");
         }}
       >
         <Text style={{ color: "#0066CC", textAlign: "center", marginTop: 16 }}>

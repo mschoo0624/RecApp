@@ -24,13 +24,13 @@ const sportOptions = [
 ];
 
 export default function SurveyPage2() {
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation = useNavigation(); // To send the data to the next page
+  const route = useRoute(); // To get the daata from the prev pages.
 
-  const { age, weight, gymLevel } = route.params;
+  const { age, weight, gymLevel } = route.params; // Getting the data from the prev page1. 
   const [selectedSports, setSelectedSports] = useState([]);
 
-  // ✅ Toggle a sport on/off
+  // Toggle a sport on/off
   const toggleSport = (sport) => {
     if (selectedSports.includes(sport)) {
       setSelectedSports(selectedSports.filter((item) => item !== sport));
@@ -39,7 +39,7 @@ export default function SurveyPage2() {
     }
   };
 
-  // ✅ Proceed to SurveyPage3 with selected data
+  // Proceed to SurveyPage3 with selected data
   const handleNext = () => {
     if (selectedSports.length === 0) {
       Alert.alert("Please select at least one sport.");
