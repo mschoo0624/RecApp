@@ -10,11 +10,9 @@ import { auth, db } from "../../lib/firebaseConfig";
 import HomeScreen from "../MainScreen/HomeScreen";
 import LoginScreen from "../Screens/LogInPage";
 import SignUpPage from "../Screens/SignUpPage";
-import SurveyComplete from "../SurveyScreens/CompletePage";
 import SurveyPage1 from "../SurveyScreens/Survey1";
 import SurveyPage2 from "../SurveyScreens/Survey2";
 import SurveyPage3 from "../SurveyScreens/Survey3";
-
 import DrawerNavigator from "./DrawerNavigator"; // need to replace with the homescreen 
 
 const Stack = createNativeStackNavigator();
@@ -74,7 +72,7 @@ export default function AppNavigator() {
             <Stack.Screen name="SurveyPage1" component={SurveyPage1} />
             <Stack.Screen name="SurveyPage2" component={SurveyPage2} />
             <Stack.Screen name="SurveyPage3" component={SurveyPage3} />
-            <Stack.Screen name="SurveyComplete" component={SurveyComplete} />
+            {/* <Stack.Screen name="SurveyComplete" component={SurveyComplete} /> */} 
             <Stack.Screen name="Home" component={HomeScreen} />
           </>
         )}

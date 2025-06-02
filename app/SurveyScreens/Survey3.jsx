@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ImageBackground,
+  Modal, // ✅ added to show overlay
 } from "react-native";
 
 // Import navigation and Firebase utilities
@@ -29,9 +30,11 @@ export default function SurveyPage3() {
   const route = useRoute();
 
   // Extract user data from previous survey pages
-  const { age, weight, gymLevel, sports } = route.params; // getting the data from the prev pages. 
+  const { age, weight, gymLevel, sports } = route.params;
+
   // State to track the selected workout goal
   const [selectedGoal, setSelectedGoal] = useState("");
+  const [showModal, setShowModal] = useState(false); // ✅ modal state
 
   // At least one of the goal options should be selected.
   const handleGoal = async () => {
@@ -64,8 +67,12 @@ export default function SurveyPage3() {
         createdAt: new Date(), // Timestamp when data was saved
       });
 
-      // Navigate to completion screen after successful save
-      navigation.navigate("SurveyComplete");
+      // ✅ Show modal and navigate to home after delay
+      setShowModal(true);
+      setTimeout(() => {
+        setShowModal(false);
+        navigation.navigate("Home");
+      }, 2500);
     } catch (error) {
       // Handle and display any errors that occur during save
       console.error("Error saving to Firestore:", error);
@@ -109,6 +116,15 @@ export default function SurveyPage3() {
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
       </View>
+
+      {/* ✅ Modal overlay to show "Survey Complete" message */}
+      <Modal visible={showModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalText}>✅ Survey Completed!</Text>
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -174,5 +190,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+
+  // ✅ Modal styling
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    backgroundColor: "#fff",
+    padding: 30,
+    borderRadius: 12,
+    elevation: 6,
+  },
+  modalText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#0066CC",
+    textAlign: "center",
   },
 });
