@@ -30,7 +30,7 @@ export default function SurveyPage3() {
   const route = useRoute();
 
   // Extract user data from previous survey pages
-  const { age, weight, gymLevel, sports } = route.params;
+  const { fullName = "", email = "", phoneNumber = "", age, weight, gymLevel, sports = [], height } = route.params;
 
   // State to track the selected workout goal
   const [selectedGoal, setSelectedGoal] = useState("");
@@ -54,12 +54,16 @@ export default function SurveyPage3() {
     try {
       // Save or update data in Firebase Firestore under unique users.
       await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
+        fullName,
+        phoneNumber,
+        // email: user.email,
+        email,
         // Store user preferences in a nested object
         preferences: {
           age,
           weight,
           gymLevel,
+          height,
           sports,
           workoutGoal: selectedGoal,
         },

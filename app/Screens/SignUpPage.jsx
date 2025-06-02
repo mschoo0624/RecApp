@@ -13,34 +13,54 @@ export default function SignUpPage() {
   const [phoneNumber, setPhoneNumber] = useState(""); // Added state for phone number
 
   const handleSignUp = async () => {
+    // Validate inputs
     if (!email.endsWith("@uic.edu")) {
-      console.log("Error", "Only @uic.edu emails are allowed");
+      Alert.alert("Error", "Only @uic.edu emails are allowed");
       return;
     }
 
     if (password !== confirmPassword) {
-      console.log("Error", "Passwords do not match");
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
     if (!fullName.trim()) {
-      console.log("Error", "Full Name is required");
+      Alert.alert("Error", "Full Name is required");
       return;
     }
 
     if (!phoneNumber.trim()) {
-      console.log("Error", "Phone Number is required");
+      Alert.alert("Error", "Phone Number is required");
       return;
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password); // Creates a new user account.
-      console.log("Success", "Account created successfully!");
+      // Create user account
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // Navigate to the Survey page after successful sign-up
-      navigation.navigate("Survey");
+      // Store additional user data in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        fullName,
+        email,
+        phoneNumber,
+        createdAt: new Date(),
+        surveyCompleted: false
+      });
+
+      // Navigate immediately to SurveyPage1
+      navigation.replace("SurveyPage1", {
+        fullName,
+        email,
+        phoneNumber
+      });
+
     } catch (error) {
-      console.log("Sign Up Failed", error.message);
+      console.error("Sign up error:", error);
+      Alert.alert(
+        "Sign Up Failed", 
+        error.message || "Please try again later"
+      );
     }
   };
 

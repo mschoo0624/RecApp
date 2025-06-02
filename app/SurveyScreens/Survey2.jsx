@@ -27,7 +27,7 @@ export default function SurveyPage2() {
   const navigation = useNavigation(); // To send the data to the next page
   const route = useRoute(); // To get the daata from the prev pages.
 
-  const { age, weight, gymLevel } = route.params; // Getting the data from the prev page1. 
+  const { fullName = "", email = "", phoneNumber = "", age, weight, gymLevel, height } = route.params;
   const [selectedSports, setSelectedSports] = useState([]);
 
   // Toggle a sport on/off
@@ -47,10 +47,14 @@ export default function SurveyPage2() {
     }
 
     navigation.navigate("SurveyPage3", {
+      fullName,
+      email,
+      phoneNumber,
       age,
       weight,
       gymLevel,
       sports: selectedSports,
+      height,
     });
   };
 

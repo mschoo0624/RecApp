@@ -1,29 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function SurveyPage1() {
-  const navigation = useNavigation(); // Get the navigation object
+  const navigation = useNavigation();
+  const route = useRoute();
 
-  // Variables to store the user's preferences data
+  // Initialize state with route params
+  const [userData, setUserData] = useState({
+    fullName: route?.params?.fullName || "",
+    email: route?.params?.email || "",
+    phoneNumber: route?.params?.phoneNumber || "",
+  });
+
+  // User preferences state
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [gymLevel, setGymLevel] = useState("");
-  const [heightFt, setHeightFt] = useState(5); // Default height in feet
-  const [heightInch, setHeightInch] = useState(0); // Default height in inches
+  const [heightFt, setHeightFt] = useState(5);
+  const [heightInch, setHeightInch] = useState(0);
+
+  useEffect(() => {
+    console.log("Current userData:", userData); // Debug log
+  }, [userData]);
 
   const handleSubmit = () => {
+    // Validate all required fields
     if (!gymLevel || !age || !weight) {
       Alert.alert("Error", "Please complete all fields.");
       return;
     }
 
-    navigation.navigate("SurveyPage2", {
-      age,
-      weight,
+    // Add age validation
+    const ageNum = parseInt(age);
+    if (ageNum < 18 || ageNum > 100) {
+      Alert.alert("Error", "Age must be between 18 and 100");
+      return;
+    }
+
+    // Add weight validation
+    const weightNum = parseInt(weight);
+    if (weightNum < 50 || weightNum > 500) {
+      Alert.alert("Error", "Weight must be between 50 and 500 lbs");
+      return;
+    }
+
+    const formData = {
+      fullName: userData.fullName,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      age: ageNum.toString(),
+      weight: weightNum.toString(),
       gymLevel,
-      height: `${heightFt} ft ${heightInch} in`, // Combine height values
-    });
+      height: `${heightFt} ft ${heightInch} in`,
+    };
+
+    console.log("Submitting data:", formData); // Debug log
+
+    navigation.navigate("SurveyPage2", formData);
   };
 
   return (
@@ -65,14 +99,14 @@ export default function SurveyPage1() {
           <View style={styles.incrementDecrementContainer}>
             <TouchableOpacity
               style={styles.incrementDecrementButton}
-              onPress={() => setHeightFt(Math.max(0, heightFt - 1))} // Decrement feet
+              onPress={() => setHeightFt(Math.max(4, heightFt - 1))} // Minimum 4 feet
             >
               <Text style={styles.incrementDecrementText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.heightValue}>{heightFt}</Text>
             <TouchableOpacity
               style={styles.incrementDecrementButton}
-              onPress={() => setHeightFt(heightFt + 1)} // Increment feet
+              onPress={() => setHeightFt(Math.min(7, heightFt + 1))} // Maximum 7 feet
             >
               <Text style={styles.incrementDecrementText}>+</Text>
             </TouchableOpacity>
@@ -85,14 +119,14 @@ export default function SurveyPage1() {
           <View style={styles.incrementDecrementContainer}>
             <TouchableOpacity
               style={styles.incrementDecrementButton}
-              onPress={() => setHeightInch(Math.max(0, heightInch - 1))} // Decrement inches
+              onPress={() => setHeightInch(Math.max(0, heightInch - 1))}
             >
               <Text style={styles.incrementDecrementText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.heightValue}>{heightInch}</Text>
             <TouchableOpacity
               style={styles.incrementDecrementButton}
-              onPress={() => setHeightInch(Math.min(11, heightInch + 1))} // Increment inches
+              onPress={() => setHeightInch(Math.min(11, heightInch + 1))}
             >
               <Text style={styles.incrementDecrementText}>+</Text>
             </TouchableOpacity>
@@ -106,19 +140,25 @@ export default function SurveyPage1() {
         style={[styles.optionButton, gymLevel === "Beginner" && styles.selectedOption]}
         onPress={() => setGymLevel("Beginner")}
       >
-        <Text style={styles.optionText}>Beginner</Text>
+        <Text style={[styles.optionText, gymLevel === "Beginner" && styles.selectedOptionText]}>
+          Beginner
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.optionButton, gymLevel === "Intermediate" && styles.selectedOption]}
         onPress={() => setGymLevel("Intermediate")}
       >
-        <Text style={styles.optionText}>Intermediate</Text>
+        <Text style={[styles.optionText, gymLevel === "Intermediate" && styles.selectedOptionText]}>
+          Intermediate
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.optionButton, gymLevel === "Advanced" && styles.selectedOption]}
         onPress={() => setGymLevel("Advanced")}
       >
-        <Text style={styles.optionText}>Advanced</Text>
+        <Text style={[styles.optionText, gymLevel === "Advanced" && styles.selectedOptionText]}>
+          Advanced
+        </Text>
       </TouchableOpacity>
 
       {/* Submit Button */}
@@ -201,6 +241,10 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: "#333",
+  },
+  selectedOptionText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   submitButton: {
     backgroundColor: "#0066CC",
