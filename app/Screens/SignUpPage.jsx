@@ -1,9 +1,17 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { setDoc, doc } from "firebase/firestore"; // Add this line
 import { auth, db } from "../../lib/firebaseConfig"; // Changed this line
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons"; // Added for back button
 
 export default function SignUpPage() {
   const navigation = useNavigation(); // added
@@ -70,57 +78,77 @@ export default function SignUpPage() {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="chevron-back" size={24} color="#FFF" />
+      </TouchableOpacity>
+
       <Text style={styles.title}>Sign Up</Text>
 
       {/* Full Name Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        placeholderTextColor="#999"
-        value={fullName}
-        onChangeText={setFullName}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Full Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          placeholderTextColor="#888"
+          value={fullName}
+          onChangeText={setFullName}
+        />
+      </View>
 
       {/* Phone Number Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Phone Number"
-        placeholderTextColor="#999"
-        keyboardType="phone-pad"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Phone Number</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="(123) 456-7890"
+          placeholderTextColor="#888"
+          keyboardType="phone-pad"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+        />
+      </View>
 
       {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="UIC Email"
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>UIC Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="example@uic.edu"
+          placeholderTextColor="#888"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+      </View>
 
       {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Create a password"
+          placeholderTextColor="#888"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+      </View>
 
       {/* Confirm Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        placeholderTextColor="#999"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Confirm Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Re-enter your password"
+          placeholderTextColor="#888"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+      </View>
 
       {/* Sign Up Button */}
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
@@ -130,42 +158,60 @@ export default function SignUpPage() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    justifyContent: "center",
     paddingHorizontal: 24,
+    justifyContent: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    zIndex: 1,
+    padding: 8,
   },
   title: {
     color: "#FFF",
     fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 40,
     textAlign: "center",
+    marginBottom: 30,
+    borderBottomWidth: 2,
+    borderColor: "#FFF",
+    paddingBottom: 10,
+  },
+  inputContainer: {
+    marginBottom: 14,
+  },
+  label: {
+    color: "#ccc",
+    fontSize: 14,
+    marginBottom: 6,
   },
   input: {
     backgroundColor: "#1a1a1a",
-    borderRadius: 12,
+    borderRadius: 10,
     height: 50,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: "#fff",
-    marginBottom: 16,
+    color: "#FFF",
     borderWidth: 1,
     borderColor: "#333",
   },
   button: {
     backgroundColor: "#0066CC",
-    borderRadius: 12,
+    borderRadius: 10,
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 20,
   },
   buttonText: {
     color: "#FFF",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "bold",
   },
 });

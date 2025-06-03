@@ -19,10 +19,11 @@ export default function SurveyPage1() {
   const [gymLevel, setGymLevel] = useState("");
   const [heightFt, setHeightFt] = useState(5);
   const [heightInch, setHeightInch] = useState(0);
-
-  // useEffect(() => {
-  //   console.log("Current userData:", userData); // Debug log
-  // }, [userData]);
+  
+  // For debugging purpose. 
+  useEffect(() => {
+    console.log("Current userData:", userData); // Debug log
+  }, [userData]);
 
   const handleSubmit = () => {
     // Validate all required fields

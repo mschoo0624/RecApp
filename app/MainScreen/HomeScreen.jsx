@@ -4,11 +4,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Alert,
 } from "react-native";
-import { signOut } from "firebase/auth";
-import { auth } from "../../lib/firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
+import { signOut } from "firebase/auth";
+import { auth, db } from "../../lib/firebaseConfig";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons"; // For the profile icon
 
 export default function HomeScreen() {
   const navigation = useNavigation(); // Changing the Screens. 

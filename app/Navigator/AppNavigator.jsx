@@ -72,7 +72,6 @@ export default function AppNavigator() {
             <Stack.Screen name="SurveyPage1" component={SurveyPage1} />
             <Stack.Screen name="SurveyPage2" component={SurveyPage2} />
             <Stack.Screen name="SurveyPage3" component={SurveyPage3} />
-            {/* <Stack.Screen name="SurveyComplete" component={SurveyComplete} /> */} 
             <Stack.Screen name="Home" component={HomeScreen} />
           </>
         )}
