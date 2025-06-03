@@ -20,9 +20,9 @@ export default function SurveyPage1() {
   const [heightFt, setHeightFt] = useState(5);
   const [heightInch, setHeightInch] = useState(0);
 
-  useEffect(() => {
-    console.log("Current userData:", userData); // Debug log
-  }, [userData]);
+  // useEffect(() => {
+  //   console.log("Current userData:", userData); // Debug log
+  // }, [userData]);
 
   const handleSubmit = () => {
     // Validate all required fields
@@ -54,8 +54,6 @@ export default function SurveyPage1() {
       gymLevel,
       height: `${heightFt} ft ${heightInch} in`,
     };
-
-    console.log("Submitting data:", formData); // Debug log
 
     navigation.navigate("SurveyPage2", formData);
   };

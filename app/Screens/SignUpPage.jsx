@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebaseConfig";
-import { useNavigation } from "@react-navigation/native"; // Added
+import { setDoc, doc } from "firebase/firestore"; // Add this line
+import { auth, db } from "../../lib/firebaseConfig"; // Changed this line
+import { useNavigation } from "@react-navigation/native";
 
 export default function SignUpPage() {
   const navigation = useNavigation(); // added
@@ -40,19 +41,22 @@ export default function SignUpPage() {
       const user = userCredential.user;
 
       // Store additional user data in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        fullName,
-        email,
-        phoneNumber,
+      const userData = {
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phoneNumber: phoneNumber.trim(),
         createdAt: new Date(),
         surveyCompleted: false
-      });
+      };
 
-      // Navigate immediately to SurveyPage1
+      // Store in Firestore
+      await setDoc(doc(db, "users", user.uid), userData);
+
+      // Navigate to survey
       navigation.replace("SurveyPage1", {
-        fullName,
-        email,
-        phoneNumber
+        fullName: userData.fullName,
+        email: userData.email,
+        phoneNumber: userData.phoneNumber
       });
 
     } catch (error) {
