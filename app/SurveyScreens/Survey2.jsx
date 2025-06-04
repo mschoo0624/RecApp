@@ -1,37 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Animated,
+  ScrollView,
+  LayoutAnimation,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 const sportOptions = [
-  "Basketball",
-  "Soccer",
-  "Tennis",
-  "Swimming",
-  "Running",
-  "Volleyball",
-  "Weightlifting",
-  "Cycling",
-  "Badminton",
-  "Pickleball",
-  "Table Tennis",
-  "Football",
+  "Basketball", "Soccer", "Tennis", "Swimming",
+  "Running", "Volleyball", "Weightlifting", "Cycling",
+  "Badminton", "Pickleball", "Table Tennis", "Football",
 ];
 
 export default function SurveyPage2() {
-  const navigation = useNavigation(); // To send the data to the next page
-  const route = useRoute(); // To get the daata from the prev pages.
+  const navigation = useNavigation();
+  const route = useRoute();
 
   const { fullName = "", email = "", phoneNumber = "", age, weight, gymLevel, height } = route.params;
-  const [selectedSports, setSelectedSports] = useState([]);
 
-  // Toggle a sport on/off
+  const [selectedSports, setSelectedSports] = useState([]);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const toggleSport = (sport) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     if (selectedSports.includes(sport)) {
       setSelectedSports(selectedSports.filter((item) => item !== sport));
     } else {
@@ -39,7 +43,6 @@ export default function SurveyPage2() {
     }
   };
 
-  // Proceed to SurveyPage3 with selected data
   const handleNext = () => {
     if (selectedSports.length === 0) {
       Alert.alert("Please select at least one sport.");
@@ -59,11 +62,10 @@ export default function SurveyPage2() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Survey Page 2</Text>
-      <Text style={styles.subtitle}>Select your preferred sports:</Text>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <Text style={styles.title}>Select Your Preferred Sports</Text>
 
-      <View style={styles.optionsContainer}>
+      <ScrollView contentContainerStyle={styles.optionsContainer}>
         {sportOptions.map((sport) => (
           <TouchableOpacity
             key={sport}
@@ -83,12 +85,12 @@ export default function SurveyPage2() {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -96,25 +98,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 24,
+    padding: 24,
     justifyContent: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 16,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
   },
   optionsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 10,
   },
   optionButton: {
     backgroundColor: "#f0f0f0",
@@ -138,10 +134,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#0066CC",
     padding: 14,
     borderRadius: 12,
-    marginTop: 32,
+    marginTop: 24,
     alignItems: "center",
-    alignSelf: "center",
-    width: "60%",
   },
   nextButtonText: {
     color: "#fff",

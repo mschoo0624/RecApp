@@ -1,45 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import * as Animatable from "react-native-animatable";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function SurveyPage1() {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // Initialize state with route params
   const [userData, setUserData] = useState({
     fullName: route?.params?.fullName || "",
     email: route?.params?.email || "",
     phoneNumber: route?.params?.phoneNumber || "",
   });
 
-  // User preferences state
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [gymLevel, setGymLevel] = useState("");
   const [heightFt, setHeightFt] = useState(5);
   const [heightInch, setHeightInch] = useState(0);
-  
-  // For debugging purpose. 
-  useEffect(() => {
-    console.log("Current userData:", userData); // Debug log
-  }, [userData]);
 
   const handleSubmit = () => {
-    // Validate all required fields
     if (!gymLevel || !age || !weight) {
-      Alert.alert("Error", "Please complete all fields.");
+      console.log("Error", "Please complete all fields.");
       return;
     }
 
-    // Add age validation
     const ageNum = parseInt(age);
     if (ageNum < 18 || ageNum > 100) {
       Alert.alert("Error", "Age must be between 18 and 100");
       return;
     }
 
-    // Add weight validation
     const weightNum = parseInt(weight);
     if (weightNum < 50 || weightNum > 500) {
       Alert.alert("Error", "Weight must be between 50 and 500 lbs");
@@ -60,148 +58,120 @@ export default function SurveyPage1() {
   };
 
   return (
-    <View style={styles.container}>
+    <Animatable.View animation="fadeInUp" duration={700} style={styles.container}>
       <Text style={styles.title}>Survey Page 1</Text>
 
       {/* Age Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Age"
-        placeholderTextColor="#999"
-        keyboardType="numeric"
-        value={age}
-        onChangeText={(text) => {
-          const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
-          setAge(numericValue);
-        }}
-      />
+      <Animatable.View animation="fadeIn" delay={100}>
+        <TextInput
+          style={styles.input}
+          placeholder="Age"
+          placeholderTextColor="#999"
+          keyboardType="numeric"
+          value={age}
+          onChangeText={(text) => setAge(text.replace(/[^0-9]/g, ""))}
+        />
+      </Animatable.View>
 
       {/* Weight Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Weight (lbs)"
-        placeholderTextColor="#999"
-        keyboardType="numeric"
-        value={weight}
-        onChangeText={(text) => {
-          const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
-          setWeight(numericValue);
-        }}
-      />
+      <Animatable.View animation="fadeIn" delay={200}>
+        <TextInput
+          style={styles.input}
+          placeholder="Weight (lbs)"
+          placeholderTextColor="#999"
+          keyboardType="numeric"
+          value={weight}
+          onChangeText={(text) => setWeight(text.replace(/[^0-9]/g, ""))}
+        />
+      </Animatable.View>
 
-      {/* Height Input */}
+      {/* Height Section */}
       <Text style={styles.subtitle}>Height:</Text>
       <View style={styles.heightContainer}>
-        {/* Feet Input */}
+        {/* Feet */}
         <View style={styles.heightBox}>
           <Text style={styles.heightLabel}>Feet</Text>
           <View style={styles.incrementDecrementContainer}>
-            <TouchableOpacity
-              style={styles.incrementDecrementButton}
-              onPress={() => setHeightFt(Math.max(4, heightFt - 1))} // Minimum 4 feet
-            >
+            <TouchableOpacity onPress={() => setHeightFt(Math.max(4, heightFt - 1))} style={styles.incrementDecrementButton}>
               <Text style={styles.incrementDecrementText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.heightValue}>{heightFt}</Text>
-            <TouchableOpacity
-              style={styles.incrementDecrementButton}
-              onPress={() => setHeightFt(Math.min(7, heightFt + 1))} // Maximum 7 feet
-            >
+            <TouchableOpacity onPress={() => setHeightFt(Math.min(7, heightFt + 1))} style={styles.incrementDecrementButton}>
               <Text style={styles.incrementDecrementText}>+</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Inches Input */}
+        {/* Inches */}
         <View style={styles.heightBox}>
           <Text style={styles.heightLabel}>Inches</Text>
           <View style={styles.incrementDecrementContainer}>
-            <TouchableOpacity
-              style={styles.incrementDecrementButton}
-              onPress={() => setHeightInch(Math.max(0, heightInch - 1))}
-            >
+            <TouchableOpacity onPress={() => setHeightInch(Math.max(0, heightInch - 1))} style={styles.incrementDecrementButton}>
               <Text style={styles.incrementDecrementText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.heightValue}>{heightInch}</Text>
-            <TouchableOpacity
-              style={styles.incrementDecrementButton}
-              onPress={() => setHeightInch(Math.min(11, heightInch + 1))}
-            >
+            <TouchableOpacity onPress={() => setHeightInch(Math.min(11, heightInch + 1))} style={styles.incrementDecrementButton}>
               <Text style={styles.incrementDecrementText}>+</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      {/* Gym Level Selection */}
+      {/* Gym Level Options */}
       <Text style={styles.subtitle}>Select your gym level:</Text>
-      <TouchableOpacity
-        style={[styles.optionButton, gymLevel === "Beginner" && styles.selectedOption]}
-        onPress={() => setGymLevel("Beginner")}
-      >
-        <Text style={[styles.optionText, gymLevel === "Beginner" && styles.selectedOptionText]}>
-          Beginner
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.optionButton, gymLevel === "Intermediate" && styles.selectedOption]}
-        onPress={() => setGymLevel("Intermediate")}
-      >
-        <Text style={[styles.optionText, gymLevel === "Intermediate" && styles.selectedOptionText]}>
-          Intermediate
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.optionButton, gymLevel === "Advanced" && styles.selectedOption]}
-        onPress={() => setGymLevel("Advanced")}
-      >
-        <Text style={[styles.optionText, gymLevel === "Advanced" && styles.selectedOptionText]}>
-          Advanced
-        </Text>
-      </TouchableOpacity>
+      {["Beginner", "Intermediate", "Advanced"].map((level, idx) => (
+        <TouchableOpacity
+          key={level}
+          style={[styles.optionButton, gymLevel === level && styles.selectedOption]}
+          onPress={() => setGymLevel(level)}
+        >
+          <Text style={[styles.optionText, gymLevel === level && styles.selectedOptionText]}>
+            {level}
+          </Text>
+        </TouchableOpacity>
+      ))}
 
-      {/* Submit Button */}
+      {/* Next Button */}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Next</Text>
       </TouchableOpacity>
-    </View>
+    </Animatable.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
     backgroundColor: "#fff",
+    justifyContent: "center",
+    padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
-    marginBottom: 16,
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#FF0000",
   },
   subtitle: {
     fontSize: 18,
-    marginTop: 20,
-    marginBottom: 10,
+    marginVertical: 10,
   },
   input: {
     backgroundColor: "#f0f0f0",
     padding: 12,
-    borderRadius: 8,
-    width: "80%",
-    marginBottom: 12,
+    borderRadius: 10,
+    marginBottom: 16,
     color: "#000",
   },
   heightContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
     marginBottom: 20,
   },
   heightBox: {
     alignItems: "center",
+    flex: 1,
   },
   heightLabel: {
     fontSize: 16,
@@ -215,23 +185,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#0066CC",
     padding: 8,
     borderRadius: 8,
-    marginHorizontal: 8,
+    marginHorizontal: 10,
   },
   incrementDecrementText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 18,
   },
   heightValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   optionButton: {
-    backgroundColor: "#f0f0f0",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "#eee",
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 12,
-    width: "80%",
     alignItems: "center",
   },
   selectedOption: {
@@ -247,10 +216,9 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "#0066CC",
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 24,
-    width: "80%",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 30,
     alignItems: "center",
   },
   submitButtonText: {
