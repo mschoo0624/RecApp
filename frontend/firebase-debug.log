@@ -1,0 +1,79 @@
+[debug] [2025-06-01T09:31:13.289Z] ----------------------------------------------------------------------
+[debug] [2025-06-01T09:31:13.295Z] Command:       /opt/homebrew/Cellar/node/23.7.0/bin/node /opt/homebrew/bin/firebase init functions
+[debug] [2025-06-01T09:31:13.295Z] CLI Version:   14.5.1
+[debug] [2025-06-01T09:31:13.295Z] Platform:      darwin
+[debug] [2025-06-01T09:31:13.295Z] Node Version:  v23.7.0
+[debug] [2025-06-01T09:31:13.295Z] Time:          Sun Jun 01 2025 18:31:13 GMT+0900 (Korean Standard Time)
+[debug] [2025-06-01T09:31:13.296Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-01T09:31:13.383Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-01T09:31:13.384Z] > authorizing via signed-in user (skchoo77@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/mschoo0624/Desktop/RecApp
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2025-06-01T09:31:13.385Z] Using project from CLI flag: recapp-1be9e
+[debug] [2025-06-01T09:31:13.385Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:13.385Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:13.386Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/recapp-1be9e [none]
+[debug] [2025-06-01T09:31:13.880Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/recapp-1be9e 200
+[debug] [2025-06-01T09:31:13.880Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/recapp-1be9e {"projectId":"recapp-1be9e","projectNumber":"251595405084","displayName":"RecApp","name":"projects/recapp-1be9e","resources":{"hostingSite":"recapp-1be9e"},"state":"ACTIVE","etag":"1_3bc9bc1a-c5b1-40cf-9848-a600b0f60e6e"}
+[info] i  Using project recapp-1be9e (RecApp) 
+[info] 
+=== Functions Setup
+[debug] [2025-06-01T09:31:13.890Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-01T09:31:13.890Z] > authorizing via signed-in user (skchoo77@gmail.com)
+[debug] [2025-06-01T09:31:13.890Z] [iam] checking project recapp-1be9e for permissions ["firebase.projects.get"]
+[debug] [2025-06-01T09:31:13.890Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:13.890Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:13.890Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/recapp-1be9e:testIamPermissions [none]
+[debug] [2025-06-01T09:31:13.890Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/recapp-1be9e:testIamPermissions x-goog-quota-user=projects/recapp-1be9e
+[debug] [2025-06-01T09:31:13.890Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/recapp-1be9e:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-06-01T09:31:14.963Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/recapp-1be9e:testIamPermissions 200
+[debug] [2025-06-01T09:31:14.964Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/recapp-1be9e:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2025-06-01T09:31:14.964Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:14.964Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:14.964Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:14.964Z] Checked if tokens are valid: true, expires at: 1748773432385
+[debug] [2025-06-01T09:31:14.964Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-06-01T09:31:14.964Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/recapp-1be9e
+[debug] [2025-06-01T09:31:14.966Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-06-01T09:31:14.966Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/recapp-1be9e
+[debug] [2025-06-01T09:31:16.447Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/runtimeconfig.googleapis.com 200
+[debug] [2025-06-01T09:31:16.448Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-06-01T09:31:16.449Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/cloudfunctions.googleapis.com 200
+[debug] [2025-06-01T09:31:16.449Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/recapp-1be9e/services/cloudfunctions.googleapis.com [omitted]
+[info] 
+Detected existing codebase(s): default
+
+[debug] [2025-06-01T09:31:29.246Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (/opt/homebrew/lib/node_modules/firebase-tools/node_modules/@inquirer/core/dist/commonjs/lib/create-prompt.js:101:37)
+    at Interface.emit (node:events:507:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1125:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:264:20)
+    at ReadStream.emit (node:events:519:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:370:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.
