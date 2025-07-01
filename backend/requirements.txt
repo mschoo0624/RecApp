@@ -1,0 +1,25 @@
+# Core Backend
+fastapi
+uvicorn
+
+# Firebase Integration
+firebase-admin
+google-cloud-firestore
+python-jose
+
+# AI/ML Components
+numpy
+scikit-learn
+transformers
+sentence-transformers
+
+# Data Handling
+pydantic
+python-dotenv
+
+# Async Support
+httpx
+
+# Security
+python-multipart
+bcrypt
