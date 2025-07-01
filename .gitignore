@@ -39,3 +39,4 @@ yarn-error.*
 app-example
 
 frontend/lib/firebaseConfig.js
+backend/DontShare/firebase-account-key.json
