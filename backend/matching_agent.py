@@ -115,13 +115,16 @@ class MatchingAgent:
     # Recommendation Engine. 
     def find_matches(self, current_user_id: str, limit: int = 5) -> List[Dict]:
         try:
+            # First getting the current users data. 
             current_user = get_user_data(current_user_id)
+            # chekcing if the current users is loggin or have completed the survery.
             if not current_user or not current_user.surveyCompleted:
                 logger.warning(f"User {current_user_id} not found or survey incomplete")
                 return []
             
-            # fetching all users and calculate compatibility with target user
+            # fetching all users and to calculate compatibility with preferred matches. 
             all_users = get_all_users(exclude=[current_user_id])
+            # If other users are not found.
             if not all_users:
                 logger.info("No other users available for matching")
                 return []
@@ -129,6 +132,7 @@ class MatchingAgent:
             matches = []
             
             for uid, user in all_users.items():
+                # Start operating the function to match curr user with other user. 
                 compatibility_score, breakdown = self.calculate_compatibility(current_user, user)
                 
                 match_data = {
@@ -147,6 +151,7 @@ class MatchingAgent:
             sorted_matches = sorted(matches, key=lambda x: x["compatibilityScore"], reverse=True)
             logger.info(f"Found {len(sorted_matches)} potential matches for user {current_user_id}")
             
+            # Showing 5 other users that have matched with other users. 
             return sorted_matches[:limit]
             
         except Exception as e:
