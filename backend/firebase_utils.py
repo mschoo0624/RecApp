@@ -1,7 +1,7 @@
 import firebase_admin  # Firebase Admin SDK for Python
 from firebase_admin import credentials, firestore  # Import credentials and Firestore client
 from google.cloud.firestore_v1.base_client import BaseClient  # Firestore base client (not always needed)
-from .models import User  # Import User model from local models.py
+from models import User  # Changed from .models to models
 from typing import Dict, Optional, List  # Type hints for better code clarity
 import os  # For file path operations
 import logging  # For logging errors and info

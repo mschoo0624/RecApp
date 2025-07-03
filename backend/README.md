@@ -15,3 +15,4 @@ This backend system powers a fitness matchmaking application that connects UIC s
 - Auth: Firebase Authentication
 - Hosting: Render/PythonAnywhere (free tier)
 - Monitoring: Python logging
+

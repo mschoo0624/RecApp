@@ -1,5 +1,5 @@
-from .models import User
-from .firebase_utils import get_user_data, get_all_users  # Move imports to top
+from models import User
+from firebase_utils import get_user_data, get_all_users  # Move imports to top
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict, Tuple
