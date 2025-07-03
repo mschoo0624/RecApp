@@ -8,12 +8,13 @@ import { auth, db } from "../../lib/firebaseConfig";
 
 // Screens
 import HomeScreen from "../MainScreen/HomeScreen";
+import ProfileScreen from "../MainScreen/ProfileScreen";
+import ChatScreen from "../MainScreen/ChatScreen";
 import LoginScreen from "../Screens/LogInPage";
 import SignUpPage from "../Screens/SignUpPage";
 import SurveyPage1 from "../SurveyScreens/Survey1";
 import SurveyPage2 from "../SurveyScreens/Survey2";
 import SurveyPage3 from "../SurveyScreens/Survey3";
-import DrawerNavigator from "./DrawerNavigator"; // need to replace with the homescreen 
 
 const Stack = createNativeStackNavigator();
 
@@ -22,7 +23,9 @@ export default function AppNavigator() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Remove this line later if you don't want to sign out on app start. 
     signOut(auth);
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
@@ -61,13 +64,36 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
+          // Auth Stack
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpPage} />
           </>
         ) : user.surveyCompleted ? (
-          <Stack.Screen name="Home" component={HomeScreen} />
+          // Main App Stack
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen 
+              name="Profile" 
+              component={ProfileScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen 
+              name="Chat" 
+              component={ChatScreen}
+              options={{
+                presentation: 'modal',
+                animation: 'slide_from_bottom',
+                headerShown: false,
+              }}
+            />
+          </>
         ) : (
+          // Survey Stack
           <>
             <Stack.Screen name="SurveyPage1" component={SurveyPage1} />
             <Stack.Screen name="SurveyPage2" component={SurveyPage2} />

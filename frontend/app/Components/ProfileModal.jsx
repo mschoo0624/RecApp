@@ -13,8 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function ProfileScreen({ route, navigation }) {
-  const { userId } = route.params;
+export default function ProfileModal({ userId, onClose, onStartChat }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -27,12 +26,12 @@ export default function ProfileScreen({ route, navigation }) {
           setUser(userDoc.data());
         } else {
           Alert.alert("Error", "User not found");
-          navigation.goBack();
+          onClose();
         }
       } catch (error) {
         console.error("Error fetching user:", error);
         Alert.alert("Error", "Failed to load user profile");
-        navigation.goBack();
+        onClose();
       } finally {
         setLoading(false);
       }
@@ -41,7 +40,7 @@ export default function ProfileScreen({ route, navigation }) {
     if (userId) {
       fetchUser();
     }
-  }, [userId, navigation]);
+  }, [userId, onClose]);
 
   if (loading) {
     return (
@@ -56,30 +55,12 @@ export default function ProfileScreen({ route, navigation }) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>User not found</Text>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backIcon}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.placeholder} />
-      </View>
-
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile Image */}
       <View style={styles.profileImageContainer}>
         {user.photoURL ? (
@@ -167,7 +148,7 @@ export default function ProfileScreen({ route, navigation }) {
       <View style={styles.actionSection}>
         <TouchableOpacity 
           style={styles.connectButton}
-          onPress={() => navigation.navigate("Chat", { userId: userId })}
+          onPress={onStartChat}
         >
           <Ionicons name="chatbubble-outline" size={20} color="white" />
           <Text style={styles.connectButtonText}>Start Conversation</Text>
@@ -180,13 +161,13 @@ export default function ProfileScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    minHeight: 200,
   },
   loadingText: {
     marginTop: 10,
@@ -197,59 +178,27 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    minHeight: 200,
   },
   errorText: {
     fontSize: 18,
     color: '#666',
-    marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: 'white',
-  },
-  backIcon: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  placeholder: {
-    width: 40,
   },
   profileImageContainer: {
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: 'white',
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 3,
     borderColor: '#3B82F6',
   },
   avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#e2e8f0',
     justifyContent: 'center',
     alignItems: 'center',
@@ -259,11 +208,10 @@ const styles = StyleSheet.create({
   basicInfo: {
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: 'white',
-    marginBottom: 16,
+    paddingHorizontal: 20,
   },
   name: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
@@ -272,7 +220,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
-    paddingHorizontal: 20,
     lineHeight: 22,
   },
   age: {
@@ -281,43 +228,36 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   section: {
-    backgroundColor: 'white',
-    marginHorizontal: 16,
-    marginBottom: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
     borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 12,
     color: '#333',
     flexDirection: 'row',
     alignItems: 'center',
   },
   infoGrid: {
-    gap: 12,
+    gap: 10,
   },
   infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 6,
   },
   infoLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
     fontWeight: '500',
   },
   infoValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
     fontWeight: '600',
   },
@@ -337,11 +277,11 @@ const styles = StyleSheet.create({
   sportText: {
     color: '#3B82F6',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 12,
   },
   actionSection: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   connectButton: {
     backgroundColor: '#3B82F6',
@@ -354,7 +294,7 @@ const styles = StyleSheet.create({
   },
   connectButtonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
