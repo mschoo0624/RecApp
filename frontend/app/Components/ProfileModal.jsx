@@ -13,6 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 
+// Profile screen for target matching user's profile.  
 export default function ProfileModal({ userId, onClose, onStartChat }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

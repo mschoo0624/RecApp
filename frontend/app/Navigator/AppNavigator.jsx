@@ -5,6 +5,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { auth, db } from "../../lib/firebaseConfig";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons'; // ADD THIS IMPORT
 
 // Screens
 import HomeScreen from "../MainScreen/HomeScreen";
@@ -16,15 +18,48 @@ import SurveyPage1 from "../SurveyScreens/Survey1";
 import SurveyPage2 from "../SurveyScreens/Survey2";
 import SurveyPage3 from "../SurveyScreens/Survey3";
 
+const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+function MainAppTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#64748b',
+      }}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={24} color={color} />
+          ),
+        }}
+        initialParams={{ userId: auth.currentUser?.uid }}
+      />
+    </Tab.Navigator>
+  );
+}
 
 export default function AppNavigator() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Remove this line later if you don't want to sign out on app start. 
-    signOut(auth);
+    // Remove this line later if you don't want to sign out on app start
+    signOut(auth); // COMMENTED OUT TO PREVENT AUTO LOGOUT
     
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
@@ -64,41 +99,28 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
-          // Auth Stack
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpPage} />
           </>
         ) : user.surveyCompleted ? (
-          // Main App Stack
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen 
-              name="Profile" 
-              component={ProfileScreen}
-              options={{
-                presentation: 'modal',
-                animation: 'slide_from_bottom',
-                headerShown: false,
-              }}
-            />
+            <Stack.Screen name="Main" component={MainAppTabs} />
             <Stack.Screen 
               name="Chat" 
               component={ChatScreen}
               options={{
                 presentation: 'modal',
                 animation: 'slide_from_bottom',
-                headerShown: false,
               }}
             />
           </>
         ) : (
-          // Survey Stack
           <>
             <Stack.Screen name="SurveyPage1" component={SurveyPage1} />
             <Stack.Screen name="SurveyPage2" component={SurveyPage2} />
             <Stack.Screen name="SurveyPage3" component={SurveyPage3} />
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
           </>
         )}
       </Stack.Navigator>

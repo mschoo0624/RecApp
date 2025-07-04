@@ -86,11 +86,11 @@ export default function SurveyPage3() {
         createdAt: new Date(),
       });
 
-      // ✅ Show modal and navigate to home after delay
+      // ✅ Show modal and navigate to Login after delay
       setShowModal(true);
       setTimeout(() => {
         setShowModal(false);
-        navigation.navigate("Home");
+        navigation.navigate("Login");
       }, 2500);
     } catch (error) {
       console.error("Error saving to Firestore:", error);

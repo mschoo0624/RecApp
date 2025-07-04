@@ -78,12 +78,22 @@ export default function HomeScreen() {
         
         // Sends the GET request to my backend APU to fetch the data for my current user.
         // @app.get("/matches/{user_id}") -> From the backend.  
-        const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
+        // const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
+        //   // sets the HTTP request header. 
+        //   headers: { 
+        //     'Authorization': `Bearer ${token}` 
+        //   }
+        // });
+        
+        // For testing a backend API endpoint for finding the matching users.  
+        const response = await fetch(`${backendAPI}/test/user/${currentUser.uid}`, {
           // sets the HTTP request header. 
           headers: { 
             'Authorization': `Bearer ${token}` 
           }
         });
+        
+        console.log("Debugging: Its working correctly.");
         
         if (!response.ok) throw new Error('Failed to fetch matches');
         
@@ -180,39 +190,42 @@ export default function HomeScreen() {
   };
 
 // Pan responder for swipe-to-close functionality on the modal
-const panResponder = PanResponder.create({
-  // Decide if the pan responder should be activated (only for downward swipes)
-  onMoveShouldSetPanResponder: (evt, gestureState) => {
-    return gestureState.dy > 0 && gestureState.vy > 0; // Only respond to downward movement
-  },
-  // Update the modal's position and backdrop opacity as the user drags down
-  onPanResponderMove: (evt, gestureState) => {
-    if (gestureState.dy > 0) {
-      slideAnim.setValue(gestureState.dy); // Move the modal down by the drag distance
-      backdropOpacity.setValue(0.5 - (gestureState.dy / SCREEN_HEIGHT) * 0.5); // Fade out the backdrop as modal moves
-    }
-  },
-  // When the user releases the drag
-  onPanResponderRelease: (evt, gestureState) => {
-    // If dragged far enough or fast enough, close the modal
-    if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-      hideProfileModal();
-    } else {
-      // Otherwise, animate the modal back to its original position
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 0.5,
-          duration: 200,
-          useNativeDriver: true,
-        })
-      ]).start();
-    }
-    },});
+const panResponder = React.useRef(
+  PanResponder.create({
+    // Decide if the pan responder should be activated (only for downward swipes)
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return gestureState.dy > 0 && gestureState.vy > 0; // Only respond to downward movement
+    },
+    // Update the modal's position and backdrop opacity as the user drags down
+    onPanResponderMove: (evt, gestureState) => {
+      if (gestureState.dy > 0) {
+        slideAnim.setValue(gestureState.dy); // Move the modal down by the drag distance
+        backdropOpacity.setValue(0.5 - (gestureState.dy / SCREEN_HEIGHT) * 0.5); // Fade out the backdrop as modal moves
+      }
+    },
+    // When the user releases the drag
+    onPanResponderRelease: (evt, gestureState) => {
+      // If dragged far enough or fast enough, close the modal
+      if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+        hideProfileModal();
+      } else {
+        // Otherwise, animate the modal back to its original position
+        Animated.parallel([
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(backdropOpacity, {
+            toValue: 0.5,
+            duration: 200,
+            useNativeDriver: true,
+          })
+        ]).start();
+      }
+    },
+  })
+).current;
 
   // For the LogOut button logic.
   const handleLogOut = async () => {
@@ -265,7 +278,7 @@ const panResponder = PanResponder.create({
       </Text>
       
       <TouchableOpacity 
-        style={styles.connectButton}
+        style={[styles.connectButton, { zIndex: 1 }]}
         onPress={(e) => {
           e.stopPropagation();
           showChatModal(item.userId);
@@ -338,11 +351,15 @@ const panResponder = PanResponder.create({
           <Animated.View 
             style={[
               styles.backdrop,
-              { opacity: backdropOpacity }
+              { 
+                opacity: backdropOpacity,
+                zIndex: 1
+              }
             ]}
           >
             <TouchableOpacity 
-              style={styles.backdropTouch}
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
               onPress={hideProfileModal}
             />
           </Animated.View>
@@ -350,7 +367,10 @@ const panResponder = PanResponder.create({
           <Animated.View 
             style={[
               styles.modalContent,
-              { transform: [{ translateY: slideAnim }] }
+              { 
+                transform: [{ translateY: slideAnim }],
+                zIndex: 2
+              }
             ]}
             {...panResponder.panHandlers}
           >
@@ -389,11 +409,15 @@ const panResponder = PanResponder.create({
           <Animated.View 
             style={[
               styles.backdrop,
-              { opacity: backdropOpacity }
+              { 
+                opacity: backdropOpacity,
+                zIndex: 1
+              }
             ]}
           >
             <TouchableOpacity 
-              style={styles.backdropTouch}
+              style={StyleSheet.absoluteFill}
+              activeOpacity={1}
               onPress={hideChatModal}
             />
           </Animated.View>
@@ -401,8 +425,12 @@ const panResponder = PanResponder.create({
           <Animated.View 
             style={[
               styles.modalContent,
-              { transform: [{ translateY: slideAnim }] }
+              { 
+                transform: [{ translateY: slideAnim }],
+                zIndex: 2
+              }
             ]}
+            {...panResponder.panHandlers}
           >
             <View style={styles.modalHeader}>
               <View style={styles.modalHandle} />
@@ -466,6 +494,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    minHeight: 250,
+    justifyContent: 'space-between',
   },
   matchHeader: {
     flexDirection: "row",
@@ -513,12 +543,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#64748b",
     marginBottom: 16,
+    flexShrink: 1,
   },
   connectButton: {
     backgroundColor: "#3B82F6",
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: "center",
+    zIndex: 1,
   },
   connectButtonText: {
     color: "white",
@@ -570,15 +602,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'black',
   },
   backdropTouch: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
   },
   modalContent: {
     backgroundColor: 'white',
@@ -586,6 +614,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     minHeight: SCREEN_HEIGHT * 0.7,
     maxHeight: SCREEN_HEIGHT * 0.9,
+    zIndex: 2,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -627,4 +656,3 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
-
