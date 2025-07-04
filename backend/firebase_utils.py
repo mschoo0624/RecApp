@@ -41,9 +41,12 @@ def get_user_data(user_id: str) -> Optional[User]:
         if not doc.exists:
             logger.info(f"User {user_id} not found")  # Log if user does not exist
             return None
-
+        # Debugging here to fix the finding the match user. 
+        logger.info("DEBUGGING: Testing the converted Data.")
         data = _convert_firestore_data(doc.to_dict())  # Convert Firestore data
+        logger.info("DEBUGGING: Has Successfully converted!!!")
         return User(**data)  # Return User object
+    
     
     except Exception as e:
         logger.error(f"Error fetching user {user_id}: {e}")  # Log error if fetch fails

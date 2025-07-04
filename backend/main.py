@@ -380,17 +380,18 @@ async def health_check():
 # Adding for the test cases. 
 @app.get("/test/user/{user_id}")
 async def test_user_fetch(user_id: str):
-    """Test endpoint to debug user fetching"""
     try:
-        logger.info(f"Testing user fetch for: {user_id}")
+        # Getting the test code user's name.
+        user = get_user_data(user_id);
+        user_name = user.fullName;
+        logger.info(f"Testing user fetch for: {user_name}")
         
-        # Step 1: Test Firebase connection
-        logger.info("Step 1: Testing Firebase connection...")
+        logger.info("Step 1: Testing Firebase connection.")
         from firebase_utils import db
         logger.info("✓ Firebase connection successful")
         
         # Step 2: Test user document exists
-        logger.info("Step 2: Testing user document exists...")
+        logger.info("Step 2: Testing user document exists.")
         doc_ref = db.collection("users").document(user_id)
         doc = doc_ref.get()
         
