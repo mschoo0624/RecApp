@@ -78,20 +78,20 @@ export default function HomeScreen() {
         
         // Sends the GET request to my backend APU to fetch the data for my current user.
         // @app.get("/matches/{user_id}") -> From the backend.  
-        // const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
-        //   // sets the HTTP request header. 
-        //   headers: { 
-        //     'Authorization': `Bearer ${token}` 
-        //   }
-        // });
-        
-        // For testing a backend API endpoint for finding the matching users.  
-        const response = await fetch(`${backendAPI}/test/user/${currentUser.uid}`, {
+        const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
           // sets the HTTP request header. 
           headers: { 
             'Authorization': `Bearer ${token}` 
           }
         });
+        
+        // For testing a backend API endpoint for finding the matching users.  
+        // const response = await fetch(`${backendAPI}/test/user/${currentUser.uid}`, {
+        //   // sets the HTTP request header. 
+        //   headers: { 
+        //     'Authorization': `Bearer ${token}` 
+        //   }
+        // });
         
         console.log("Debugging: Its working correctly.");
         
