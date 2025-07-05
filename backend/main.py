@@ -9,13 +9,19 @@ import logging
 import traceback
 
 # Importing other files. 
-from models import User
+from models import User, FriendRequest, FriendRequestResponse, Preferences  
 from matching_agent import MatchingAgent
 from firebase_utils import (
-    get_user_data, 
-    update_user_sports, 
+    get_user_data,
     get_all_users,
-    batch_get_users
+    update_user_sports,
+    # batch_get_users,
+    create_friend_request,
+    update_friend_request_status,
+    add_friendship,
+    get_friend_request,  # Added this import
+    get_pending_requests,
+    get_friends_list
 )
 
 # Configure logging with more detail
@@ -124,7 +130,16 @@ async def get_matches(
     min_score: float = Query(default=0.0, ge=0.0, le=100.0)
 ):
     try:
-        logger.info(f"Finding matches for user_id: {user_id}, limit: {limit}, min_score: {min_score}")
+        # Getting the test code user's name.
+        user = get_user_data(user_id);
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        user_name = user.fullName;
+        logger.info(f"Finding matches for user_Name: {user_name}, limit: {limit}, min_score: {min_score}")
         
         # Debug: Check if matching_agent is initialized
         if not matching_agent:
@@ -184,7 +199,17 @@ async def get_advanced_matches(
     limit: int = Query(default=5, ge=1, le=20)
 ):
     try:
-        logger.info(f"Advanced matching for user_id: {user_id}")
+        logger.info("Advanced Matching Algorithm has been activated.")
+        # Getting the test code user's name.
+        user = get_user_data(user_id);
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        user_name = user.fullName;
+        logger.info(f"Finding matches for user_Name: {user_name}");
         # Basic implementation - can be enhanced with filtering logic
         matches = matching_agent.find_matches(user_id, limit)
         
@@ -377,17 +402,172 @@ async def health_check():
             detail="Service unhealthy"
         )
         
+# Friend Request API endpoints. 
+##########################################################################################
+# Sending Friend Request Endpoints API.
+@app.post("/friend-requests/send", response_model=FriendRequestResponse)
+async def send_friend_request_endpoint(from_user: str, to_user: str):  # Renamed to avoid conflict
+    try:
+        logger.info(f"Sending friend request from {from_user} to {to_user}")
+        # Getting the data for the from user and to user 
+        from_user_data = get_user_data(from_user)
+        logger.info("DEBUGGING: Got the data of From User!!!")
+        to_user_data = get_user_data(to_user)
+        logger.info("DEBUGGING: Got the data of To User!!!")
+        
+        if not from_user_data or not to_user_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+            
+        # Create request. 
+        request_id = create_friend_request(from_user, to_user)
+        logger.info("DEBUGGING: Friend Request has been made it!!!")
+        if not request_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create friend request")
+        
+        logger.info("DEBUGGING: Has Successfully sent the friend request!!!")
+        return FriendRequestResponse(
+            request_id=request_id,
+            status="sent",
+            message="Friend request sent successfully")
+
+    except Exception as e:
+        logger.error(f"Error sending friend request: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send friend request"
+        )
+        
+# Handling responses to friend requests accepted or rejected. 
+@app.post("/friend-requests/respond", response_model=FriendRequestResponse)
+async def respond_to_request(
+    request_id: str, 
+    response: str  # "accept" or "reject"
+):
+    try:
+        logger.info(f"Responding to request {request_id} with {response}")
+        
+        if response not in ["accept", "reject"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid response type"
+            )
+        
+        # Update request status
+        new_status = "accepted" if response == "accept" else "rejected"
+        success = update_friend_request_status(request_id, new_status)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Request not found or update failed"
+            )
+        
+        # If accepted, create friendship
+        if new_status == "accepted":
+            # Fetch the friend request document to get user IDs.
+            request_data = get_friend_request(request_id)
+            if not request_data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Friend request not found"
+                )
+                
+            from_user = request_data.get('from_user')
+            to_user = request_data.get('to_user')
+            
+            # Check if user IDs are present
+            if not from_user or not to_user:
+                logger.error("Friend request accepted but user IDs missing")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Friend request data incomplete"
+                )
+            
+            # Add friendship relationship
+            friendship_success = add_friendship(from_user, to_user)
+            if not friendship_success:
+                logger.error(f"Failed to create friendship between {from_user} and {to_user}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create friendship"
+                )
+        
+        return FriendRequestResponse(
+            request_id=request_id,
+            status=new_status,
+            message=f"Friend request {new_status}"
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error responding to request: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process response"
+        )
+
+# Showing the pending friend requests that have been sent. 
+@app.get("/friend-requests/pending/{user_id}")
+async def get_pending_requests_endpoint(user_id: str):  # Renamed to avoid conflict
+    try:
+        logger.info(f"Fetching pending requests for {user_id}")
+        # Getting all the pending requests the current user got. 
+        requests = get_pending_requests(user_id)
+        return {
+            "user_id": user_id,
+            "requests": requests,
+            "count": len(requests),
+            "retrieved_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching pending requests: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get pending requests"
+        )
+
+# Showing the list of friends. 
+@app.get("/friends/{user_id}")
+async def get_friends_list_endpoint(user_id: str):
+    try:
+        logger.info(f"Fetching friends list for {user_id}")
+        # Getting all the friends that requests have been accepted. 
+        friends = get_friends_list(user_id)
+        return {
+            "user_id": user_id,
+            "friends": friends,
+            "count": len(friends),
+            "retrieved_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching friends list: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get friends list"
+        )
+
+##########################################################################################
 # Adding for the test cases. 
 @app.get("/test/user/{user_id}")
 async def test_user_fetch(user_id: str):
     try:
         # Getting the test code user's name.
-        user = get_user_data(user_id);
-        user_name = user.fullName;
+        user = get_user_data(user_id)
+        if not user:
+            return {"error": "User not found", "user_id": user_id}
+            
+        user_name = user.fullName
         logger.info(f"Testing user fetch for: {user_name}")
         
         logger.info("Step 1: Testing Firebase connection.")
-        from firebase_utils import db
+        # Removed direct import of db from firebase_utils
+        from firebase_admin import firestore
+        db = firestore.client()
         logger.info("✓ Firebase connection successful")
         
         # Step 2: Test user document exists

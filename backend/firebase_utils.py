@@ -1,10 +1,11 @@
 import firebase_admin  # Firebase Admin SDK for Python
 from firebase_admin import credentials, firestore  # Import credentials and Firestore client
 from google.cloud.firestore_v1.base_client import BaseClient  # Firestore base client (not always needed)
-from models import User  # Changed from .models to models
-from typing import Dict, Optional, List  # Type hints for better code clarity
+from models import User, FriendRequest  
+from typing import Dict, Optional, List, Union  # Type hints for better code clarity
 import os  # For file path operations
 import logging  # For logging errors and info
+from datetime import datetime
 
 # Configure logging to show INFO level and above
 logging.basicConfig(level=logging.INFO)
@@ -24,10 +25,10 @@ except Exception as e:
 
 # Convert Firestore timestamps to datetime objects
 def _convert_firestore_data(data: dict) -> dict:
-    # Check if 'createdAt' field exists and has a 'to_datetime' method
-    if 'createdAt' in data and hasattr(data['createdAt'], 'to_datetime'):
+    # Check if 'created_at' field exists and has a 'to_datetime' method
+    if 'created_at' in data and hasattr(data['created_at'], 'to_datetime'):
         # Convert Firestore timestamp to Python datetime
-        data['createdAt'] = data['createdAt'].to_datetime()
+        data['created_at'] = data['created_at'].to_datetime()
     # Return the updated dictionary
     return data
 
@@ -119,3 +120,131 @@ def batch_get_users(user_ids: List[str]) -> Dict[str, User]:
     except Exception as e:
         logger.error(f"Batch fetch failed: {e}")  # Log error if batch fetch fails
         return {}
+
+# Create the new friends requests documents. 
+def create_friend_request(from_user_id: str, to_user_id: str) -> Optional[str]:
+    try:
+        request_data = {
+            "from_user": from_user_id,
+            "to_user": to_user_id,
+            "status": "pending",
+            "created_at": firestore.SERVER_TIMESTAMP
+        }
+        # Adds a new doc with the data in request_data to the friend_requests collection in Firestore.
+        _, doc_ref = db.collection("friend_requests").add(request_data)
+        # and returning the newly created friend request doc. 
+        logger.info("DEBUGGING: Returning the newly added user request doc.")
+        return doc_ref.id
+    
+    except Exception as e:
+        logger.error(f"Error creating friend request: {e}")
+        return None
+    
+# Update status of a friend request (accepted/rejected)
+def update_friend_request_status(request_id: str, status: str) -> bool:
+    try:
+        # Checking if the argument is either accepct or rejected.
+        if status not in ["accepted", "rejected"]:
+            raise ValueError("Invalid status")
+        # Updating the data either "accepcted" or "rejected".
+        db.collection("friend_requests").document(request_id).update({
+            "status": status,
+            "responded_at": firestore.SERVER_TIMESTAMP
+        })
+        return True
+    
+    except Exception as e:
+        logger.error(f"Error updating friend request: {e}")
+        return False
+    
+# Add mutual friendship between two users
+def add_friendship(user1_id: str, user2_id: str) -> bool:
+    try:
+        batch = db.batch()
+        user1_ref = db.collection("users").document(user1_id)
+        user2_ref = db.collection("users").document(user2_id)
+        # updating the relation with User 1 and User 2. 
+        batch.update(user1_ref, {
+            "friends": firestore.ArrayUnion([user2_id]),
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+        
+        batch.update(user2_ref, {
+            "friends": firestore.ArrayUnion([user1_id]),
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+        # commit the changes. 
+        batch.commit()
+        return True
+    except Exception as e:
+        logger.error(f"Error creating friendship: {e}")
+        return False
+
+#Get pending friend requests for a user. 
+def get_pending_requests(user_id: str) -> List[Dict]:
+    try:
+        # its going to appear in notification scree. 
+        requests = db.collection("friend_requests")\
+            .where(filter=("to_user", "==", user_id))\
+            .where(filter=("status", "==", "pending"))\
+            .order_by("created_at", direction=firestore.Query.DESCENDING)\
+            .stream()
+        
+        return [
+            {**doc.to_dict(), "id": doc.id} 
+            for doc in requests
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching pending requests: {e}")
+        return []
+
+# To fetch a friend request document by its ID
+def get_friend_request(request_id: str) -> Optional[dict]:
+    """Fetch a friend request document by its ID."""
+    try:
+        doc_ref = db.collection("friend_requests").document(request_id)
+        doc = doc_ref.get()
+        if not doc.exists:
+            logger.warning(f"Friend request {request_id} not found")
+            return None
+        data = doc.to_dict()
+        data["id"] = doc.id
+        return data
+    except Exception as e:
+        logger.error(f"Error fetching friend request {request_id}: {e}")
+        return None
+
+# Get a user's friends list with basic info. 
+def get_friends_list(user_id: str) -> List[Dict]:
+    try:
+        # Getting uer's doc to look at their collectionss. 
+        user_ref = db.collection("users").document(user_id)
+        user_doc = user_ref.get()
+        
+        if not user_doc.exists:
+            return []
+        
+        # Checking the matching users.     
+        friends = user_doc.to_dict().get("friends", [])
+        if not friends:
+            return []
+        
+        # Batch fetch friend profiles
+        friends_docs = db.collection("users")\
+                       .where(firestore.FieldPath.document_id(), "in", friends)\
+                       .select(["fullName", "photoURL", "sports"])\
+                       .stream()
+        
+        return [{"id": doc.id, **doc.to_dict()} for doc in friends_docs]
+    
+    except Exception as e:
+        logger.error(f"Error fetching friends list: {e}")
+        return []
+
+# Enhanced converter to handle friend request timestamps
+def _convert_firestore_data(data: dict) -> dict:
+    if 'created_at' in data and hasattr(data['created_at'], 'to_datetime'):
+        data['created_at'] = data['created_at'].to_datetime()
+    if 'responded_at' in data and hasattr(data['responded_at'], 'to_datetime'):
+        data['responded_at'] = data['responded_at'].to_datetime()
+    return data
