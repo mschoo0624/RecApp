@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  Modal, // modal is a UI element that appears on top of the main content to capture the user's attention and interaction.
+  Modal,
   Animated,
   Dimensions,
   PanResponder
@@ -27,21 +27,175 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Adding the backend API. 
 const backendAPI = "http://localhost:8000";
 
+// Custom hook for modal animation
+const useModalAnimation = () => {
+  const slideAnim = useState(new Animated.Value(SCREEN_HEIGHT))[0];
+  const backdropOpacity = useState(new Animated.Value(0))[0];
+  
+  const show = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0.5,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, [slideAnim, backdropOpacity]);
+
+  const hide = useCallback((callback) => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      })
+    ]).start(callback);
+  }, [slideAnim, backdropOpacity]);
+
+  return { slideAnim, backdropOpacity, show, hide };
+};
+
+// Custom hook for pan responder
+const useModalPanResponder = (slideAnim, backdropOpacity, onHide) => {
+  return useRef(
+    PanResponder.create({
+      // Decide if the pan responder should be activated (only for downward swipes)
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return gestureState.dy > 0 && gestureState.vy > 0;
+      },
+      // Update the modal's position and backdrop opacity as the user drags down
+      onPanResponderMove: (evt, gestureState) => {
+        if (gestureState.dy > 0) {
+          slideAnim.setValue(gestureState.dy);
+          backdropOpacity.setValue(0.5 - (gestureState.dy / SCREEN_HEIGHT) * 0.5);
+        }
+      },
+      // When the user releases the drag
+      onPanResponderRelease: (evt, gestureState) => {
+        // If dragged far enough or fast enough, close the modal
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          onHide();
+        } else {
+          // Otherwise, animate the modal back to its original position
+          Animated.parallel([
+            Animated.spring(slideAnim, {
+              toValue: 0,
+              useNativeDriver: true,
+            }),
+            Animated.spring(backdropOpacity, {
+              toValue: 0.5,
+              useNativeDriver: true,
+            })
+          ]).start();
+        }
+      },
+    })
+  ).current;
+};
+
+// Chat Modal Component
+const ChatModal = ({ userId, onClose }) => (
+  <View style={styles.chatPlaceholder}>
+    <Text style={styles.chatTitle}>Chat with User</Text>
+    <Text>User ID: {userId}</Text>
+    <Text style={styles.comingSoon}>Chat feature coming soon!</Text>
+  </View>
+);
+
+// Unified Modal Container Component
+const ModalContainer = ({ 
+  visible, 
+  children, 
+  onClose, 
+  slideAnim, 
+  backdropOpacity, 
+  panHandlers 
+}) => (
+  <Modal
+    visible={visible}
+    transparent={true}
+    animationType="none"
+    onRequestClose={onClose}
+  >
+    <View style={styles.modalContainer}>
+      <Animated.View 
+        style={[
+          styles.backdrop,
+          { 
+            opacity: backdropOpacity,
+            zIndex: 1
+          }
+        ]}
+      >
+        <TouchableOpacity 
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+      </Animated.View>
+      
+      <Animated.View 
+        style={[
+          styles.modalContent,
+          { 
+            transform: [{ translateY: slideAnim }],
+            zIndex: 2
+          }
+        ]}
+        {...panHandlers}
+      >
+        <View style={styles.modalHeader}>
+          <View style={styles.modalHandle} />
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={onClose}
+          >
+            <Ionicons name="close" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
+        {children}
+      </Animated.View>
+    </View>
+  </Modal>
+);
+
 export default function HomeScreen() {
   const navigation = useNavigation(); // Changing the Screens. 
-  // const [user, setUser] = useState(null);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   // Modal states
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [chatModalVisible, setChatModalVisible] = useState(false);
 
-  // Animation values
-  const slideAnim = useState(new Animated.Value(SCREEN_HEIGHT))[0];
-  const backdropOpacity = useState(new Animated.Value(0))[0];
+  // Profile modal hooks
+  const profileModal = useModalAnimation();
+  const profilePanHandlers = useModalPanResponder(
+    profileModal.slideAnim,
+    profileModal.backdropOpacity,
+    () => hideProfileModal()
+  );
+
+  // Chat modal hooks
+  const chatModal = useModalAnimation();
+  const chatPanHandlers = useModalPanResponder(
+    chatModal.slideAnim,
+    chatModal.backdropOpacity,
+    () => hideChatModal()
+  );
 
   // Fetching the current user data.
   useEffect(() => {
@@ -85,14 +239,6 @@ export default function HomeScreen() {
           }
         });
         
-        // For testing a backend API endpoint for finding the matching users.  
-        // const response = await fetch(`${backendAPI}/test/user/${currentUser.uid}`, {
-        //   // sets the HTTP request header. 
-        //   headers: { 
-        //     'Authorization': `Bearer ${token}` 
-        //   }
-        // });
-        
         console.log("Debugging: Its working correctly.");
         
         if (!response.ok) throw new Error('Failed to fetch matches');
@@ -113,119 +259,76 @@ export default function HomeScreen() {
     }
   }, [userData]);
 
+  // Function to send friend request
+  const sendFriendRequest = async (toUserId) => {
+    try {
+      setSendingRequest(true);
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        Alert.alert("Error", "You must be logged in to send a friend request");
+        return;
+      }
+
+      // Get Firebase ID token for authentication
+      const token = await currentUser.getIdToken();
+      
+      // Prepare request body
+      const requestBody = {
+        from_user: currentUser.uid,
+        to_user: toUserId
+      };
+
+      const response = await fetch(`${backendAPI}/friend-requests/send`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to send friend request');
+      }
+
+      Alert.alert("Success", "Friend request sent successfully!");
+    } catch (error) {
+      Alert.alert("Error", error.message || "Failed to send friend request");
+    } finally {
+      setSendingRequest(false);
+    }
+  };
+
   // Shows the profile modal for the selected user with animation
   const showProfileModal = (userId) => {
     // Set the user ID to display in the modal
     setSelectedUserId(userId);           
     // Make the profile modal visible
     setProfileModalVisible(true);   
-
-    // Animate the modal sliding up and the backdrop fading in
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,                      // Slide modal to the top (visible position)
-        duration: 300,                   // Animation duration in ms
-        useNativeDriver: true,           // Use native driver for better performance
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0.5,                    // Fade in the backdrop to 50% opacity
-        duration: 300,                   // Animation duration in ms
-        useNativeDriver: true,           // Use native driver for better performance
-      })
-    ]).start();                          // Start both animations in parallel
+    // Start animation
+    profileModal.show();
   };
 
-  const hideProfileModal = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      })
-    ]).start(() => {
+  const hideProfileModal = useCallback(() => {
+    profileModal.hide(() => {
       setProfileModalVisible(false);
       setSelectedUserId(null);
     });
-  };
+  }, [profileModal]);
 
   const showChatModal = (userId) => {
     setSelectedUserId(userId);
     setChatModalVisible(true);
-    
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0.5,
-        duration: 300,
-        useNativeDriver: true,
-      })
-    ]).start();
+    chatModal.show();
   };
 
-  const hideChatModal = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      })
-    ]).start(() => {
+  const hideChatModal = useCallback(() => {
+    chatModal.hide(() => {
       setChatModalVisible(false);
       setSelectedUserId(null);
     });
-  };
-
-// Pan responder for swipe-to-close functionality on the modal
-const panResponder = React.useRef(
-  PanResponder.create({
-    // Decide if the pan responder should be activated (only for downward swipes)
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return gestureState.dy > 0 && gestureState.vy > 0; // Only respond to downward movement
-    },
-    // Update the modal's position and backdrop opacity as the user drags down
-    onPanResponderMove: (evt, gestureState) => {
-      if (gestureState.dy > 0) {
-        slideAnim.setValue(gestureState.dy); // Move the modal down by the drag distance
-        backdropOpacity.setValue(0.5 - (gestureState.dy / SCREEN_HEIGHT) * 0.5); // Fade out the backdrop as modal moves
-      }
-    },
-    // When the user releases the drag
-    onPanResponderRelease: (evt, gestureState) => {
-      // If dragged far enough or fast enough, close the modal
-      if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-        hideProfileModal();
-      } else {
-        // Otherwise, animate the modal back to its original position
-        Animated.parallel([
-          Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(backdropOpacity, {
-            toValue: 0.5,
-            duration: 200,
-            useNativeDriver: true,
-          })
-        ]).start();
-      }
-    },
-  })
-).current;
+  }, [chatModal]);
 
   // For the LogOut button logic.
   const handleLogOut = async () => {
@@ -281,10 +384,16 @@ const panResponder = React.useRef(
         style={[styles.connectButton, { zIndex: 1 }]}
         onPress={(e) => {
           e.stopPropagation();
-          showChatModal(item.userId);
+          // Changed to send friend request instead of opening chat
+          sendFriendRequest(item.userId);
         }}
+        disabled={sendingRequest}
       >
-        <Text style={styles.connectButtonText}>Connect</Text>
+        {sendingRequest ? (
+          <ActivityIndicator color="white" size="small" />
+        ) : (
+          <Text style={styles.connectButtonText}>Connect</Text>
+        )}
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -341,115 +450,38 @@ const panResponder = React.useRef(
       </ScrollView>
 
       {/* Profile Modal */}
-      <Modal
+      <ModalContainer
         visible={profileModalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={hideProfileModal}
+        onClose={hideProfileModal}
+        slideAnim={profileModal.slideAnim}
+        backdropOpacity={profileModal.backdropOpacity}
+        panHandlers={profilePanHandlers}
       >
-        <View style={styles.modalContainer}>
-          <Animated.View 
-            style={[
-              styles.backdrop,
-              { 
-                opacity: backdropOpacity,
-                zIndex: 1
-              }
-            ]}
-          >
-            <TouchableOpacity 
-              style={StyleSheet.absoluteFill}
-              activeOpacity={1}
-              onPress={hideProfileModal}
-            />
-          </Animated.View>
-          
-          <Animated.View 
-            style={[
-              styles.modalContent,
-              { 
-                transform: [{ translateY: slideAnim }],
-                zIndex: 2
-              }
-            ]}
-            {...panResponder.panHandlers}
-          >
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHandle} />
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={hideProfileModal}
-              >
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            {selectedUserId && (
-              <ProfileModal 
-                userId={selectedUserId}
-                onClose={hideProfileModal}
-                onStartChat={() => {
-                  hideProfileModal();
-                  setTimeout(() => showChatModal(selectedUserId), 300);
-                }}
-              />
-            )}
-          </Animated.View>
-        </View>
-      </Modal>
+        {selectedUserId && (
+          <ProfileModal 
+            userId={selectedUserId}
+            onClose={hideProfileModal}
+            onStartChat={() => {
+              hideProfileModal();
+              setTimeout(() => showChatModal(selectedUserId), 300);
+            }}
+          />
+        )}
+      </ModalContainer>
 
       {/* Chat Modal */}
-      <Modal
+      <ModalContainer
         visible={chatModalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={hideChatModal}
+        onClose={hideChatModal}
+        slideAnim={chatModal.slideAnim}
+        backdropOpacity={chatModal.backdropOpacity}
+        panHandlers={chatPanHandlers}
       >
-        <View style={styles.modalContainer}>
-          <Animated.View 
-            style={[
-              styles.backdrop,
-              { 
-                opacity: backdropOpacity,
-                zIndex: 1
-              }
-            ]}
-          >
-            <TouchableOpacity 
-              style={StyleSheet.absoluteFill}
-              activeOpacity={1}
-              onPress={hideChatModal}
-            />
-          </Animated.View>
-          
-          <Animated.View 
-            style={[
-              styles.modalContent,
-              { 
-                transform: [{ translateY: slideAnim }],
-                zIndex: 2
-              }
-            ]}
-            {...panResponder.panHandlers}
-          >
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHandle} />
-              <TouchableOpacity 
-                style={styles.closeButton}
-                onPress={hideChatModal}
-              >
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.chatPlaceholder}>
-              <Text style={styles.chatTitle}>Chat with User</Text>
-              <Text>User ID: {selectedUserId}</Text>
-              <Text style={styles.comingSoon}>Chat feature coming soon!</Text>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
+        <ChatModal 
+          userId={selectedUserId} 
+          onClose={hideChatModal} 
+        />
+      </ModalContainer>
     </View>
   );
 }
@@ -551,6 +583,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: "center",
     zIndex: 1,
+    justifyContent: 'center',
+    minHeight: 40,
   },
   connectButtonText: {
     color: "white",

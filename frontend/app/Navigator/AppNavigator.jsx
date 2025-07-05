@@ -1,12 +1,12 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { auth, db } from "../../lib/firebaseConfig";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons'; // ADD THIS IMPORT
+import { Ionicons } from '@expo/vector-icons';
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebaseConfig";
 
 // Screens
 import HomeScreen from "../MainScreen/HomeScreen";
@@ -17,11 +17,13 @@ import SignUpPage from "../Screens/SignUpPage";
 import SurveyPage1 from "../SurveyScreens/Survey1";
 import SurveyPage2 from "../SurveyScreens/Survey2";
 import SurveyPage3 from "../SurveyScreens/Survey3";
+import NotificationsScreen from "../MainScreen/NotificationsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const backendAPI = "http://localhost:8000";
 
-function MainAppTabs() {
+function MainAppTabs({ pendingCount }) {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -37,6 +39,16 @@ function MainAppTabs() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="home-outline" size={24} color={color} />
           ),
+        }}
+      />
+      <Tab.Screen 
+        name="Notifications" 
+        component={NotificationsScreen}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="notifications-outline" size={24} color={color} />
+          ),
+          tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
         }}
       />
       <Tab.Screen 
@@ -56,11 +68,11 @@ function MainAppTabs() {
 export default function AppNavigator() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    // Remove this line later if you don't want to sign out on app start
-    signOut(auth); // COMMENTED OUT TO PREVENT AUTO LOGOUT
-    
+    signOut(auth); // Remove/comment out for production
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
@@ -70,7 +82,6 @@ export default function AppNavigator() {
 
       try {
         const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-
         if (userDoc.exists() && userDoc.data().surveyCompleted) {
           setUser({ ...firebaseUser, surveyCompleted: true });
         } else {
@@ -86,6 +97,29 @@ export default function AppNavigator() {
 
     return unsubscribe;
   }, []);
+
+  // Fetch pending requests count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      if (!auth.currentUser) {
+        setPendingCount(0);
+        return;
+      }
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const res = await fetch(`${backendAPI}/friend-requests/pending/${auth.currentUser.uid}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setPendingCount(data.count || 0);
+      } catch (e) {
+        setPendingCount(0);
+      }
+    };
+    if (user && user.surveyCompleted) {
+      fetchPendingCount();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -105,7 +139,9 @@ export default function AppNavigator() {
           </>
         ) : user.surveyCompleted ? (
           <>
-            <Stack.Screen name="Main" component={MainAppTabs} />
+            <Stack.Screen name="Main">
+              {() => <MainAppTabs pendingCount={pendingCount} />}
+            </Stack.Screen>
             <Stack.Screen 
               name="Chat" 
               component={ChatScreen}
