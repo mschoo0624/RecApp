@@ -9,39 +9,41 @@ import {
   TouchableOpacity,
   Alert 
 } from 'react-native';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebaseConfig';
+// import { doc, getDoc } from 'firebase/firestore';
+// import { db } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 
-// Profile screen for target matching user's profile.  
+const backendAPI = "http://localhost:8000"; // Or your deployed backend URL
+
 export default function ProfileModal({ userId, onClose, onStartChat }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
+    if (!userId) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const userDoc = await getDoc(doc(db, "users", userId));
-        if (userDoc.exists()) {
-          setUser(userDoc.data());
-        } else {
-          Alert.alert("Error", "User not found");
-          onClose();
+        const res = await fetch(`${backendAPI}/users/${userId}`);
+        if (!res.ok) {
+          throw new Error("User not found");
         }
+        const userData = await res.json();
+        setUser(userData);
       } catch (error) {
         console.error("Error fetching user:", error);
-        Alert.alert("Error", "Failed to load user profile");
-        onClose();
+        Alert.alert("Error", "User not found");
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
-    
-    if (userId) {
-      fetchUser();
-    }
-  }, [userId, onClose]);
+    fetchUser();
+  }, [userId]);
 
   if (loading) {
     return (
@@ -56,12 +58,20 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>User not found</Text>
+        <TouchableOpacity onPress={onClose} style={{marginTop: 20}}>
+          <Text style={{color: '#3B82F6', fontWeight: 'bold'}}>Close</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Close Button */}
+      <TouchableOpacity onPress={onClose} style={{position: 'absolute', top: 20, right: 20, zIndex: 10}}>
+        <Ionicons name="close" size={28} color="#3B82F6" />
+      </TouchableOpacity>
+
       {/* Profile Image */}
       <View style={styles.profileImageContainer}>
         {user.photoURL ? (
@@ -80,7 +90,6 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
       <View style={styles.basicInfo}>
         <Text style={styles.name}>{user.fullName || "Unknown User"}</Text>
         <Text style={styles.bio}>{user.bio || "Fitness enthusiast"}</Text>
-        
         {user.age && (
           <Text style={styles.age}>Age: {user.age}</Text>
         )}
@@ -91,7 +100,6 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
         <Text style={styles.sectionTitle}>
           <Ionicons name="fitness" size={20} color="#3B82F6" /> Fitness Profile
         </Text>
-        
         {user.preferences && (
           <View style={styles.infoGrid}>
             <View style={styles.infoItem}>
@@ -100,14 +108,12 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
                 {user.preferences.gymLevel || "Not specified"}
               </Text>
             </View>
-            
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>Workout Goal:</Text>
               <Text style={styles.infoValue}>
                 {user.preferences.workoutGoal || "Not specified"}
               </Text>
             </View>
-            
             {user.preferences.workoutFrequency && (
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Frequency:</Text>
@@ -116,7 +122,6 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
                 </Text>
               </View>
             )}
-            
             {user.preferences.timeOfDay && (
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Preferred Time:</Text>
