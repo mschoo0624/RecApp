@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   Alert 
 } from 'react-native';
-// import { doc, getDoc } from 'firebase/firestore';
-// import { db } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 
 const backendAPI = "http://localhost:8000"; // Or your deployed backend URL
@@ -28,6 +26,7 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
     const fetchUser = async () => {
       try {
         setLoading(true);
+        // Fetching the other user's data to show the their profile info. 
         const res = await fetch(`${backendAPI}/users/${userId}`);
         if (!res.ok) {
           throw new Error("User not found");

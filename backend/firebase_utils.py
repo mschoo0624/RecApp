@@ -76,8 +76,8 @@ def get_all_users(exclude: List[str] = None) -> Dict[str, User]:
         logger.error(f"Error fetching users: {e}")  # Log error if fetch fails
         return {}
 
+#Update user's sports list with validation
 def update_user_sports(user_id: str, sports: List[str]) -> bool:
-    """Update user's sports list with validation"""
     try:
         # Validate sports list
         if not sports or not isinstance(sports, list):
@@ -86,14 +86,13 @@ def update_user_sports(user_id: str, sports: List[str]) -> bool:
         
         # Sanitize sports list
         clean_sports = [sport.strip() for sport in sports if isinstance(sport, str) and sport.strip()]
-        print("Debugging: Sport Lists: ", clean_sports)
         
         if not clean_sports:
             logger.warning(f"No valid sports provided for user {user_id}")
             return False
         
         db.collection("users").document(user_id).update({
-            "sports": clean_sports,
+            "preferences.sports": clean_sports,
             "lastUpdated": firestore.SERVER_TIMESTAMP  # Update timestamp
         })
         

@@ -277,7 +277,7 @@ export default function HomeScreen() {
         from_user: currentUser.uid,
         to_user: toUserId
       };
-
+      // Sending the friends request. 
       const response = await fetch(`${backendAPI}/friend-requests/send`, {
         method: 'POST',
         headers: { 

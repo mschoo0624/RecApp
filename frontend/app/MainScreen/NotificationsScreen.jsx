@@ -68,6 +68,7 @@ export default function NotificationsScreen({ navigation }) {
                 style={[styles.actionButton, styles.acceptButton]}
                 onPress={async () => {
                     try {
+                    // To Accecpt the the pending friend requests. 
                     const token = await auth.currentUser.getIdToken();
                     const res = await fetch(`${backendAPI}/friend-requests/respond`, {
                         method: "POST",
@@ -95,6 +96,7 @@ export default function NotificationsScreen({ navigation }) {
                 style={[styles.actionButton, styles.rejectButton]}
                 onPress={async () => {
                     try {
+                    // To reject the the pending friend requests. 
                     const token = await auth.currentUser.getIdToken();
                     const res = await fetch(`${backendAPI}/friend-requests/respond`, {
                         method: "POST",

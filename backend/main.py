@@ -19,7 +19,7 @@ from firebase_utils import (
     create_friend_request,
     update_friend_request_status,
     add_friendship,
-    get_friend_request,  # Added this import
+    get_friend_request,  # Added this import.
     get_pending_requests,
     get_friends_list
 )
@@ -69,9 +69,8 @@ except Exception as e:
 # Model for updating user's sports preferences
 class SportsUpdateRequest(BaseModel):
     sports: List[str]  # List of sports activities.
-
     # Every time data is assigned to the sports field, run this custom validation method before accepting the value. 
-    @validator('sports')  # Fixed: changed from 'sport' to 'sports'
+    @validator('sports')
     def validate_sports(cls, v):
         if not v:
             raise ValueError('Sports list cannot be empty')

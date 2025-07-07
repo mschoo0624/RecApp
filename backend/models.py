@@ -8,6 +8,7 @@ class Preferences(BaseModel):
     height: str
     weight: str
     workoutGoal: str = Field(..., alias="workoutGoal")
+    sports: List[str] = Field(default_factory=list)
 
 class User(BaseModel):
     email: str
