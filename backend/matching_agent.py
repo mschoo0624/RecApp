@@ -17,10 +17,10 @@ class MatchingAgent:
             ngram_range=(1, 2)  # Include bigrams for better matching
         )
         self.weights = {
-            'text_similarity': 0.6,
-            'age_compatibility': 0.2,
-            'gym_level_match': 0.1,
-            'sports_overlap': 0.1
+            'text_similarity': 0.4,
+            'age_compatibility': 0.1,
+            'gym_level_match': 0.3,
+            'sports_overlap': 0.2
         }
     
     # Data Preprocessing
@@ -34,7 +34,6 @@ class MatchingAgent:
 
     # helper for better recommendations by calculating the each survery results.
     def _calculate_age_compatibility(self, user1: User, user2: User) -> float:
-        """Calculate age compatibility score (0-1)"""
         try:
             age1 = int(user1.preferences.age)
             age2 = int(user2.preferences.age)
@@ -49,11 +48,11 @@ class MatchingAgent:
                 return 0.5
             else:
                 return 0.2
+            
         except (ValueError, AttributeError):
             return 0.5  # Default neutral score
-
+    # Calculate gym experience compatibility
     def _calculate_gym_level_match(self, user1: User, user2: User) -> float:
-        """Calculate gym experience compatibility"""
         levels = ['beginner', 'intermediate', 'advanced']
         try:
             level1_idx = levels.index(user1.preferences.gymLevel.lower())
@@ -78,11 +77,10 @@ class MatchingAgent:
         return len(intersection) / len(union) if union else 0
     # Core AI Engine. 
     def calculate_compatibility(self, user1: User, user2: User) -> Tuple[float, Dict[str, float]]:
-        """Calculate comprehensive match score with breakdown"""
         try:
             # Convert user profiles → TF-IDF vectors. 
             texts = [self._create_feature_text(user1), self._create_feature_text(user2)]
-            tfidf_matrix = self.vectorizer.fit_transform(texts)
+            tfidf_matrix = self.vectorizer.transform(texts)
             text_sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
             
             # Individual compatibility scores (Calculate domain-specific scores)
@@ -115,26 +113,29 @@ class MatchingAgent:
     # Recommendation Engine. 
     def find_matches(self, current_user_id: str, limit: int = 5) -> List[Dict]:
         try:
-            # First getting the current users data. 
+            # First getting the current user's data. 
             current_user = get_user_data(current_user_id)
-            # chekcing if the current users is loggin or have completed the survery.
             if not current_user or not current_user.surveyCompleted:
                 logger.warning(f"User {current_user_id} not found or survey incomplete")
                 return []
-            
-            # fetching all users and to calculate compatibility with preferred matches. 
+
+            # Fetching all users except the current user.
             all_users = get_all_users(exclude=[current_user_id])
-            # If other users are not found.
             if not all_users:
                 logger.info("No other users available for matching")
                 return []
-            
+
+            # ✅ Refit TF-IDF vectorizer with all user texts
+            all_texts = [self._create_feature_text(current_user)] + [
+                self._create_feature_text(user) for user in all_users.values()
+            ]
+            self.vectorizer.fit(all_texts)
+
             matches = []
-            
+
             for uid, user in all_users.items():
-                # Start operating the function to match curr user with other user. 
                 compatibility_score, breakdown = self.calculate_compatibility(current_user, user)
-                
+
                 match_data = {
                     "userId": uid,
                     "name": user.fullName,
@@ -146,17 +147,21 @@ class MatchingAgent:
                     "scoreBreakdown": breakdown
                 }
                 matches.append(match_data)
-            
-            # Sort by compatibility score and return top matches
+
             sorted_matches = sorted(matches, key=lambda x: x["compatibilityScore"], reverse=True)
             logger.info(f"Found {len(sorted_matches)} potential matches for user {current_user_id}")
-            
-            # Showing 5 other users that have matched with other users. 
             return sorted_matches[:limit]
-            
+
         except Exception as e:
             logger.error(f"Error finding matches for user {current_user_id}: {e}")
             return []
+    
+    #Force refresh the vectorizer with current user data
+    def refresh_vectorizer(self):
+        all_users = get_all_users()
+        all_texts = [self._create_feature_text(user) for user in all_users.values()]
+        self.vectorizer.fit(all_texts)
+        logger.info("Vectorizer refreshed with latest user data")
     
     # Explainable AI. 
     def get_match_explanation(self, user_id1: str, user_id2: str) -> Dict:

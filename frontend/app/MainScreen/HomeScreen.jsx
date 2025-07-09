@@ -14,7 +14,7 @@ import {
   Dimensions,
   PanResponder
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../../lib/firebaseConfig";
 import { getDoc, doc } from "firebase/firestore";
@@ -219,45 +219,75 @@ export default function HomeScreen() {
   }, []);
 
   // Fetching the mathces from the backend code. 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        setLoading(true);
-        // Checking for the current user. 
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
+  // useEffect(() => {
+  //   const fetchMatches = async () => {
+  //     try {
+  //       setLoading(true);
+  //       // Checking for the current user. 
+  //       const currentUser = auth.currentUser;
+  //       if (!currentUser) return;
         
-        // Get Firebase ID token for authentication. 
-        const token = await currentUser.getIdToken();
+  //       // Get Firebase ID token for authentication. 
+  //       const token = await currentUser.getIdToken();
         
-        // Sends the GET request to my backend APU to fetch the data for my current user.
-        // @app.get("/matches/{user_id}") -> From the backend.  
-        const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
-          // sets the HTTP request header. 
-          headers: { 
-            'Authorization': `Bearer ${token}` 
-          }
-        });
+  //       // Sends the GET request to my backend APU to fetch the data for my current user.
+  //       // @app.get("/matches/{user_id}") -> From the backend.  
+  //       const response = await fetch(`${backendAPI}/matches/${currentUser.uid}`, {
+  //         // sets the HTTP request header. 
+  //         headers: { 
+  //           'Authorization': `Bearer ${token}` 
+  //         }
+  //       });
         
-        console.log("Debugging: Its working correctly.");
+  //       console.log("Debugging: Its working correctly.");
         
-        if (!response.ok) throw new Error('Failed to fetch matches');
+  //       if (!response.ok) throw new Error('Failed to fetch matches');
         
-        // Waits for the backend response and parses it as JSON.
-        const data = await response.json();
-        // and then Updates the matches. 
-        setMatches(data.matches || []);
-      } catch (error) {
-        Alert.alert("Error", error.message || "Failed to load matches");
-      } finally {
-        setLoading(false);
-      }
-    };
-    // Only fetches matches for users who have completed the survey.
-    if (userData?.surveyCompleted) {
-      fetchMatches();
-    }
-  }, [userData]);
+  //       // Waits for the backend response and parses it as JSON.
+  //       const data = await response.json();
+  //       // and then Updates the matches. 
+  //       setMatches(data.matches || []);
+  //     } catch (error) {
+  //       Alert.alert("Error", error.message || "Failed to load matches");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   // Only fetches matches for users who have completed the survey.
+  //   if (userData?.surveyCompleted) {
+  //     fetchMatches();
+  //   }
+  // }, [userData]);
+
+  useFocusEffect(
+    useCallback(() => {
+        if (userData?.surveyCompleted) {
+            const fetchMatches = async () => {
+                try {
+                    setLoading(true);
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) return;
+
+                    const token = await currentUser.getIdToken();
+                    // Add timestamp to bust cache
+                    const response = await fetch(`${backendAPI}/matches/${currentUser.uid}?t=${Date.now()}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!response.ok) throw new Error('Failed to fetch matches');
+                    const data = await response.json();
+                    setMatches(data.matches || []);
+                } catch (error) {
+                    Alert.alert("Error", error.message || "Failed to refresh matches");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchMatches();
+        }
+    }, [userData])
+  );
 
   // Function to send friend request
   const sendFriendRequest = async (toUserId) => {

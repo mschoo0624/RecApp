@@ -10,16 +10,18 @@ import {
 import { auth } from '../../lib/firebaseConfig';
 
 const backendAPI = "http://localhost:8000";
+// All the sports options are from the Survey Page to match the firebase database sports. 
 const sportsOptions = [
   "Basketball", "Soccer", "Tennis", "Swimming",
   "Running", "Volleyball", "Weightlifting", "Cycling",
   "Badminton", "Pickleball", "Table Tennis", "Football",
 ];
 
+// Same structure as the survey page.
 export default function UpdateSports({ route, navigation }) {
   const { userId, currentSports, refreshProfile } = route.params;
   const [selectedSports, setSelectedSports] = useState(currentSports);
-
+  // toggle for the selecting the sport options. 
   const toggleSport = (sport) => {
     if (selectedSports.includes(sport)) {
       setSelectedSports(selectedSports.filter(s => s !== sport));
@@ -27,14 +29,14 @@ export default function UpdateSports({ route, navigation }) {
       setSelectedSports([...selectedSports, sport]);
     }
   };
-
+   // Saving the updated sports selections.
   const saveSports = async () => {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("Not authenticated");
 
       const token = await currentUser.getIdToken();
-
+      // Calling the backend API endpoints to save the changed sports selections. 
       const response = await fetch(`${backendAPI}/users/${userId}/sports`, {
         method: 'PATCH',
         headers: {
@@ -50,8 +52,10 @@ export default function UpdateSports({ route, navigation }) {
       }
 
       Alert.alert("Success", "Sports updated");
+      // refreshProfile();
+      // navigation.goBack();
       refreshProfile();
-      navigation.goBack();
+      navigation.navigate("Home", { refreshMatches: true });
     } catch (err) {
       console.error(err);
       Alert.alert("Error", err.message);

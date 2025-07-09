@@ -276,15 +276,24 @@ async def update_sports(user_id: str, request: SportsUpdateRequest):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to update sports preferences"
             )
-        
         logger.info(f"Successfully updated sports for user {user_id}")
+        
+        # Force refresh the vectorizer with all user data
+        # all_users = get_all_users()
+        # all_texts = [matching_agent._create_feature_text(user) for user in all_users.values()]
+        # matching_agent.vectorizer.fit(all_texts)
+        matching_agent.refresh_vectorizer()
+        
+        # Recalculate matches using updated data
+        updated_matches = matching_agent.find_matches(user_id, limit=5)
         
         return {
             "status": "success",
             "message": "Sports preferences updated successfully",
             "user_id": user_id,
             "updated_sports": request.sports,
-            "updated_at": datetime.utcnow().isoformat()
+            "updated_at": datetime.utcnow().isoformat(),
+            "updated_matches": updated_matches  # Return updated matches
         }
         
     except HTTPException:

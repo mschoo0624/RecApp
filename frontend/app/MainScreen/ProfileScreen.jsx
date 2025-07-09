@@ -14,6 +14,7 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
+// Calling the modal screen here. 
 import UpdateSports from "../Components/UpdateSports";
 
 const backendAPI = "http://localhost:8000";
