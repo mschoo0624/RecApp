@@ -68,11 +68,13 @@ class MatchingAgent:
         sports1 = set(sport.lower() for sport in user1.sports) if user1.sports else set()
         sports2 = set(sport.lower() for sport in user2.sports) if user2.sports else set()
         
+        logger.info(f"Comparing sports between {user1.email} and {user2.email}")
+
         if not sports1 and not sports2:
             return 0.5  # Both have no specific sports
         
         intersection = sports1.intersection(sports2)
-        union = sports1.union(sports2)
+        union = sports1.union(sports2)  
         
         return len(intersection) / len(union) if union else 0
     # Core AI Engine. 

@@ -269,21 +269,23 @@ export default function HomeScreen() {
                     if (!currentUser) return;
 
                     const token = await currentUser.getIdToken();
-                    // Add timestamp to bust cache
-                    const response = await fetch(`${backendAPI}/matches/${currentUser.uid}?t=${Date.now()}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
+                    // Add cache-busting parameter
+                    const response = await fetch(
+                        `${backendAPI}/matches/${currentUser.uid}?refresh=${Date.now()}`, 
+                        {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }
+                    );
 
                     if (!response.ok) throw new Error('Failed to fetch matches');
                     const data = await response.json();
                     setMatches(data.matches || []);
                 } catch (error) {
-                    Alert.alert("Error", error.message || "Failed to refresh matches");
+                    console.error("Match fetch error:", error);
                 } finally {
                     setLoading(false);
                 }
             };
-
             fetchMatches();
         }
     }, [userData])

@@ -29,38 +29,38 @@ export default function UpdateSports({ route, navigation }) {
       setSelectedSports([...selectedSports, sport]);
     }
   };
-   // Saving the updated sports selections.
+
+  // Saving the updated sports selections.
   const saveSports = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error("Not authenticated");
+        const currentUser = auth.currentUser;
+        if (!currentUser) throw new Error("Not authenticated");
 
-      const token = await currentUser.getIdToken();
-      // Calling the backend API endpoints to save the changed sports selections. 
-      const response = await fetch(`${backendAPI}/users/${userId}/sports`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ sports: selectedSports })
-      });
+        const token = await currentUser.getIdToken();
+        const response = await fetch(`${backendAPI}/users/${userId}/sports`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ sports: selectedSports })
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to update sports');
-      }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to update sports');
+        }
 
-      Alert.alert("Success", "Sports updated");
-      // refreshProfile();
-      // navigation.goBack();
-      refreshProfile();
-      navigation.navigate("Home", { refreshMatches: true });
+        Alert.alert("Success", "Sports updated");
+        
+        // Refresh profile and matches separately
+        refreshProfile();
+        navigation.navigate("Home", { refreshMatches: true });
+        
     } catch (err) {
-      console.error(err);
-      Alert.alert("Error", err.message);
+        Alert.alert("Error", err.message);
     }
-  };
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

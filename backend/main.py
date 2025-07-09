@@ -100,7 +100,7 @@ async def get_user(user_id: str):
         logger.info(f"Fetching user data for user_id: {user_id}")
         # Getting the user's data. 
         user = get_user_data(user_id)
-    
+        user_name = user.fullName
         if not user:
             logger.warning(f"User {user_id} not found")
             raise HTTPException(
@@ -108,7 +108,7 @@ async def get_user(user_id: str):
                 detail="User not found."
             )
     
-        logger.info(f"Successfully retrieved user profile: {user_id}")
+        logger.info(f"Successfully retrieved user profile: {user_name}")
         return user
     
     except HTTPException:
@@ -285,15 +285,15 @@ async def update_sports(user_id: str, request: SportsUpdateRequest):
         matching_agent.refresh_vectorizer()
         
         # Recalculate matches using updated data
-        updated_matches = matching_agent.find_matches(user_id, limit=5)
+        # updated_matches = matching_agent.find_matches(user_id, limit=5)
         
         return {
             "status": "success",
             "message": "Sports preferences updated successfully",
             "user_id": user_id,
             "updated_sports": request.sports,
-            "updated_at": datetime.utcnow().isoformat(),
-            "updated_matches": updated_matches  # Return updated matches
+            "updated_at": datetime.utcnow().isoformat()
+            # "updated_matches": updated_matches  # Return updated matches
         }
         
     except HTTPException:

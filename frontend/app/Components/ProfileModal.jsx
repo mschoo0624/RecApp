@@ -135,17 +135,21 @@ export default function ProfileModal({ userId, onClose, onStartChat }) {
 
       {/* Sports Section */}
       {user.sports && user.sports.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            <Ionicons name="basketball" size={20} color="#3B82F6" /> Sports Interests
+       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          <Ionicons name="basketball" size={20} color="#3B82F6" /> Sports Interests
           </Text>
-          <View style={styles.sportsContainer}>
-            {user.sports.map((sport, index) => (
-              <View key={index} style={styles.sportTag}>
-                <Text style={styles.sportText}>{sport}</Text>
-              </View>
-            ))}
-          </View>
+          {user.sports?.length > 0 ? (
+            <View style={styles.sportsContainer}>
+              {user.sports.map((sport, index) => (
+                <View key={index} style={styles.sportTag}>
+                  <Text style={styles.sportText}>{sport}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.noSportsText}>No sports listed</Text>
+          )}
         </View>
       )}
 
@@ -283,6 +287,12 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '600',
     fontSize: 12,
+  },
+  noSportsText: {
+    color: '#888',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 10,
   },
   actionSection: {
     paddingHorizontal: 20,
