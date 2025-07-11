@@ -58,7 +58,7 @@ export default function NotificationsScreen({ navigation }) {
             <View style={styles.notificationContent}>
             <Text style={styles.notificationTitle}>Friend Request</Text>
             <Text style={styles.notificationMessage}>
-                From: {item.from_user}
+                From: {item.from_user_name || item.from_user}
             </Text>
             <Text style={styles.notificationTime}>
                 {item.created_at ? new Date(item.created_at).toLocaleString() : ""}

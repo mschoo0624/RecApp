@@ -413,7 +413,7 @@ export default function HomeScreen() {
       </Text>
       
       <TouchableOpacity 
-        style={[styles.connectButton, { zIndex: 1 }]}
+        style={[styles.requestButton, { zIndex: 1 }]}
         onPress={(e) => {
           e.stopPropagation();
           // Changed to send friend request instead of opening chat
@@ -424,7 +424,7 @@ export default function HomeScreen() {
         {sendingRequest ? (
           <ActivityIndicator color="white" size="small" />
         ) : (
-          <Text style={styles.connectButtonText}>Connect</Text>
+          <Text style={styles.requestButtonText}>Request</Text>
         )}
       </TouchableOpacity>
     </TouchableOpacity>
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     flexShrink: 1,
   },
-  connectButton: {
+  requestButton: {
     backgroundColor: "#3B82F6",
     borderRadius: 8,
     paddingVertical: 10,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 40,
   },
-  connectButtonText: {
+  requestButtonText: {
     color: "white",
     fontWeight: "bold",
   },

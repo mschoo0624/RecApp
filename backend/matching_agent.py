@@ -17,10 +17,10 @@ class MatchingAgent:
             ngram_range=(1, 2)  # Include bigrams for better matching
         )
         self.weights = {
-            'text_similarity': 0.4,
+            'text_similarity': 0.3,
             'age_compatibility': 0.1,
             'gym_level_match': 0.3,
-            'sports_overlap': 0.2
+            'sports_overlap': 0.3
         }
     
     # Data Preprocessing

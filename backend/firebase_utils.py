@@ -123,9 +123,14 @@ def batch_get_users(user_ids: List[str]) -> Dict[str, User]:
 # Create the new friends requests documents. 
 def create_friend_request(from_user_id: str, to_user_id: str) -> Optional[str]:
     try:
+        from_user = get_user_data(from_user_id)
+        to_user = get_user_data(to_user_id)
+        
         request_data = {
             "from_user": from_user_id,
+            "from_user_name": from_user.fullName,
             "to_user": to_user_id,
+            "to_user_name": to_user.fullName,
             "status": "pending",
             "created_at": firestore.SERVER_TIMESTAMP
         }
@@ -174,6 +179,7 @@ def add_friendship(user1_id: str, user2_id: str) -> bool:
         })
         # commit the changes. 
         batch.commit()
+        logger.info(f"Successfully created friendship between {user1_id} and {user2_id}")
         return True
     except Exception as e:
         logger.error(f"Error creating friendship: {e}")
@@ -182,20 +188,20 @@ def add_friendship(user1_id: str, user2_id: str) -> bool:
 #Get pending friend requests for a user. 
 def get_pending_requests(user_id: str) -> List[Dict]:
     try:
-        # its going to appear in notification scree. 
-        requests = db.collection("friend_requests")\
-            .where(filter=("to_user", "==", user_id))\
-            .where(filter=("status", "==", "pending"))\
-            .order_by("created_at", direction=firestore.Query.DESCENDING)\
+        requests = db.collection("friend_requests") \
+            .where("to_user", "==", user_id) \
+            .where("status", "==", "pending") \
+            .order_by("created_at", direction=firestore.Query.DESCENDING) \
             .stream()
-        
+
         return [
-            {**doc.to_dict(), "id": doc.id} 
+            {**_convert_firestore_data(doc.to_dict()), "id": doc.id}
             for doc in requests
         ]
     except Exception as e:
         logger.error(f"Error fetching pending requests: {e}")
         return []
+
 
 # To fetch a friend request document by its ID
 def get_friend_request(request_id: str) -> Optional[dict]:

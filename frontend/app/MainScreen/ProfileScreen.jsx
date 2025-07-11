@@ -14,6 +14,8 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 // Calling the modal screen here. 
 import UpdateSports from "../Components/UpdateSports";
 
@@ -94,11 +96,12 @@ export default function ProfileScreen({ route, navigation }) {
     fetchUserData();
   }, [userId, navigation]);
 
-  useEffect(() => {
-    if (userId) {
-      fetchFriendsList(userId);
-    }
-  }, [userId]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+      fetchFriendsList(userId); // Replace `userId` with actual ID if needed
+    }, [userId])
+  );  
 
   if (loading) {
     return (
@@ -231,10 +234,10 @@ export default function ProfileScreen({ route, navigation }) {
                     <Ionicons name="person" size={24} color="#666" />
                   </View>
                 )}
-                <Text style={styles.friendName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.friendName} numberOfLines={1}>{item.fullName}</Text>
               </TouchableOpacity>
             )}
-            keyExtractor={item => item._id}
+            keyExtractor={item => item.id || item._id}
             contentContainerStyle={styles.friendsList}
             showsHorizontalScrollIndicator={false}
           />

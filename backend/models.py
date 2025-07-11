@@ -39,3 +39,7 @@ class FriendRequestResponse(BaseModel):
     request_id: str
     status: str
     message: str
+    
+class FriendRequestAction(BaseModel):  # ✅ New input model
+    request_id: str
+    response: str

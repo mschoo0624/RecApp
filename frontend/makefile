@@ -1,2 +1,3 @@
 make:
 	npx expo start
+

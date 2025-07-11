@@ -9,13 +9,12 @@ import logging
 import traceback
 
 # Importing other files. 
-from models import User, FriendRequest, FriendRequestResponse, Preferences  
+from models import User, FriendRequest, FriendRequestResponse,FriendRequestAction
 from matching_agent import MatchingAgent
 from firebase_utils import (
     get_user_data,
     get_all_users,
     update_user_sports,
-    # batch_get_users,
     create_friend_request,
     update_friend_request_status,
     add_friendship,
@@ -414,9 +413,12 @@ async def health_check():
 ##########################################################################################
 # Sending Friend Request Endpoints API.
 @app.post("/friend-requests/send", response_model=FriendRequestResponse)
-async def send_friend_request_endpoint(from_user: str, to_user: str):  # Renamed to avoid conflict
+async def send_friend_request_endpoint(data: FriendRequest):  # Renamed to avoid conflict
     try:
+        from_user = data.from_user
+        to_user = data.to_user
         logger.info(f"Sending friend request from {from_user} to {to_user}")
+        
         # Getting the data for the from user and to user 
         from_user_data = get_user_data(from_user)
         logger.info("DEBUGGING: Got the data of From User!!!")
@@ -425,7 +427,7 @@ async def send_friend_request_endpoint(from_user: str, to_user: str):  # Renamed
         
         if not from_user_data or not to_user_data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=404,
                 detail="User not found"
             )
             
@@ -452,11 +454,11 @@ async def send_friend_request_endpoint(from_user: str, to_user: str):  # Renamed
         
 # Handling responses to friend requests accepted or rejected. 
 @app.post("/friend-requests/respond", response_model=FriendRequestResponse)
-async def respond_to_request(
-    request_id: str, 
-    response: str  # "accept" or "reject"
-):
+async def respond_to_request(action: FriendRequestAction):
     try:
+        request_id = action.request_id
+        response = action.response
+        
         logger.info(f"Responding to request {request_id} with {response}")
         
         if response not in ["accept", "reject"]:
@@ -498,6 +500,7 @@ async def respond_to_request(
             
             # Add friendship relationship
             friendship_success = add_friendship(from_user, to_user)
+            logger.info("Debugging: Added the friendship.")
             if not friendship_success:
                 logger.error(f"Failed to create friendship between {from_user} and {to_user}")
                 raise HTTPException(
@@ -526,10 +529,19 @@ async def get_pending_requests_endpoint(user_id: str):  # Renamed to avoid confl
         logger.info(f"Fetching pending requests for {user_id}")
         # Getting all the pending requests the current user got. 
         requests = get_pending_requests(user_id)
+        
+        # Enrich each request with sender name.
+        enriched_requests = []
+        for r in requests:
+            from_user_id = r.get("from_user")
+            sender = get_user_data(from_user_id)
+            r["from_user_name"] = sender.fullName if sender else "Unknown"
+            enriched_requests.append(r)
+        
         return {
             "user_id": user_id,
-            "requests": requests,
-            "count": len(requests),
+            "requests": enriched_requests,
+            "count": len(enriched_requests),
             "retrieved_at": datetime.utcnow().isoformat()
         }
     except Exception as e:
