@@ -66,11 +66,13 @@ export default function ProfileScreen({ route, navigation }) {
       const token = await currentUser.getIdToken();
 
       const response = await fetch(`${backendAPI}/friends/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) throw new Error('Failed to fetch friends');
-
       const data = await response.json();
       setFriends(data.friends || []);
     } catch (error) {
@@ -225,7 +227,7 @@ export default function ProfileScreen({ route, navigation }) {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.friendItem}
-                onPress={() => navigation.navigate("Profile", { userId: item._id })}
+                onPress={() => navigation.navigate("Profile", { userId: item.id })}
               >
                 {item.photoURL ? (
                   <Image source={{ uri: item.photoURL }} style={styles.friendImage} />
@@ -237,7 +239,7 @@ export default function ProfileScreen({ route, navigation }) {
                 <Text style={styles.friendName} numberOfLines={1}>{item.fullName}</Text>
               </TouchableOpacity>
             )}
-            keyExtractor={item => item.id || item._id}
+            keyExtractor={item => item.id}
             contentContainerStyle={styles.friendsList}
             showsHorizontalScrollIndicator={false}
           />

@@ -1,7 +1,7 @@
 import firebase_admin  # Firebase Admin SDK for Python
 from firebase_admin import credentials, firestore  # Import credentials and Firestore client
 from google.cloud.firestore_v1.base_client import BaseClient  # Firestore base client (not always needed)
-from models import User, FriendRequest  
+from models import User, FriendRequest, FriendRequestResponse,FriendRequestAction  
 from typing import Dict, Optional, List, Union  # Type hints for better code clarity
 import os  # For file path operations
 import logging  # For logging errors and info
@@ -120,7 +120,7 @@ def batch_get_users(user_ids: List[str]) -> Dict[str, User]:
         logger.error(f"Batch fetch failed: {e}")  # Log error if batch fetch fails
         return {}
 
-# Create the new friends requests documents. 
+# Create the new friends requests documents. (In the firebase database)
 def create_friend_request(from_user_id: str, to_user_id: str) -> Optional[str]:
     try:
         from_user = get_user_data(from_user_id)
@@ -164,23 +164,29 @@ def update_friend_request_status(request_id: str, status: str) -> bool:
 # Add mutual friendship between two users
 def add_friendship(user1_id: str, user2_id: str) -> bool:
     try:
-        batch = db.batch()
+        batch = db.batch() 
         user1_ref = db.collection("users").document(user1_id)
         user2_ref = db.collection("users").document(user2_id)
-        # updating the relation with User 1 and User 2. 
+        
         batch.update(user1_ref, {
             "friends": firestore.ArrayUnion([user2_id]),
             "updated_at": firestore.SERVER_TIMESTAMP
         })
-        
         batch.update(user2_ref, {
             "friends": firestore.ArrayUnion([user1_id]),
             "updated_at": firestore.SERVER_TIMESTAMP
         })
         # commit the changes. 
         batch.commit()
-        logger.info(f"Successfully created friendship between {user1_id} and {user2_id}")
+        user1_data = get_user_data(user1_id)
+        user1 = user1_data.fullName
+        
+        user2_data = get_user_data(user2_id)
+        user2 = user2_data.fullName
+        
+        logger.info(f"Successfully add_friendship function between {user1} and {user2}")
         return True
+    
     except Exception as e:
         logger.error(f"Error creating friendship: {e}")
         return False
@@ -202,19 +208,20 @@ def get_pending_requests(user_id: str) -> List[Dict]:
         logger.error(f"Error fetching pending requests: {e}")
         return []
 
-
 # To fetch a friend request document by its ID
 def get_friend_request(request_id: str) -> Optional[dict]:
-    """Fetch a friend request document by its ID."""
     try:
         doc_ref = db.collection("friend_requests").document(request_id)
         doc = doc_ref.get()
+        
         if not doc.exists:
             logger.warning(f"Friend request {request_id} not found")
             return None
+        
         data = doc.to_dict()
         data["id"] = doc.id
         return data
+    
     except Exception as e:
         logger.error(f"Error fetching friend request {request_id}: {e}")
         return None
@@ -234,12 +241,14 @@ def get_friends_list(user_id: str) -> List[Dict]:
         if not friends:
             return []
         
+        # Removed the photoURL for now. 
+        # .select(["fullName", "photoURL", "sports"])\
         # Batch fetch friend profiles
         friends_docs = db.collection("users")\
                        .where(firestore.FieldPath.document_id(), "in", friends)\
-                       .select(["fullName", "photoURL", "sports"])\
+                       .select(["fullName", "sports"])\
                        .stream()
-        
+        logger.info("DEBUGGING: HELLO IT WORKED HEHE!!!")
         return [{"id": doc.id, **doc.to_dict()} for doc in friends_docs]
     
     except Exception as e:

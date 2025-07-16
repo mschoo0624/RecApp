@@ -33,19 +33,6 @@ logger = logging.getLogger(__name__)
 # Creating instance of the fastAPI.  
 app = FastAPI()
 
-# Add exception handler for better debugging
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    logger.error(f"Global exception handler caught: {exc}")
-    logger.error(f"Request URL: {request.url}")
-    logger.error(f"Request method: {request.method}")
-    logger.error(f"Traceback: {traceback.format_exc()}")
-    
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"Internal server error: {str(exc)}"}
-    )
-
 # CORS Configuration. 
 app.add_middleware(
     CORSMiddleware,
@@ -278,13 +265,7 @@ async def update_sports(user_id: str, request: SportsUpdateRequest):
         logger.info(f"Successfully updated sports for user {user_id}")
         
         # Force refresh the vectorizer with all user data
-        # all_users = get_all_users()
-        # all_texts = [matching_agent._create_feature_text(user) for user in all_users.values()]
-        # matching_agent.vectorizer.fit(all_texts)
         matching_agent.refresh_vectorizer()
-        
-        # Recalculate matches using updated data
-        # updated_matches = matching_agent.find_matches(user_id, limit=5)
         
         return {
             "status": "success",
@@ -292,7 +273,6 @@ async def update_sports(user_id: str, request: SportsUpdateRequest):
             "user_id": user_id,
             "updated_sports": request.sports,
             "updated_at": datetime.utcnow().isoformat()
-            # "updated_matches": updated_matches  # Return updated matches
         }
         
     except HTTPException:
@@ -570,70 +550,3 @@ async def get_friends_list_endpoint(user_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get friends list"
         )
-
-##########################################################################################
-# Adding for the test cases. 
-@app.get("/test/user/{user_id}")
-async def test_user_fetch(user_id: str):
-    try:
-        # Getting the test code user's name.
-        user = get_user_data(user_id)
-        if not user:
-            return {"error": "User not found", "user_id": user_id}
-            
-        user_name = user.fullName
-        logger.info(f"Testing user fetch for: {user_name}")
-        
-        logger.info("Step 1: Testing Firebase connection.")
-        # Removed direct import of db from firebase_utils
-        from firebase_admin import firestore
-        db = firestore.client()
-        logger.info("✓ Firebase connection successful")
-        
-        # Step 2: Test user document exists
-        logger.info("Step 2: Testing user document exists.")
-        doc_ref = db.collection("users").document(user_id)
-        doc = doc_ref.get()
-        
-        if not doc.exists:
-            return {"error": "User document not found", "user_id": user_id}
-        
-        logger.info("✓ User document exists")
-        
-        # Step 3: Test raw data
-        logger.info("Step 3: Getting raw user data...")
-        raw_data = doc.to_dict()
-        logger.info(f"Raw data keys: {list(raw_data.keys())}")
-        
-        # Step 4: Test User model creation
-        logger.info("Step 4: Testing User model creation...")
-        user = get_user_data(user_id)
-        
-        if not user:
-            return {"error": "Failed to create User model", "raw_data": raw_data}
-            
-        logger.info("✓ User model created successfully")
-        
-        # Step 5: Test matching agent initialization
-        logger.info("Step 5: Testing matching agent...")
-        if not matching_agent:
-            return {"error": "MatchingAgent not initialized"}
-        
-        logger.info("✓ MatchingAgent is initialized")
-        
-        return {
-            "success": True,
-            "user_id": user_id,
-            "user_name": user.fullName,
-            "survey_completed": user.surveyCompleted,
-            "sports_count": len(user.sports),
-            "raw_data_keys": list(raw_data.keys())
-        }
-        
-    except Exception as e:
-        logger.error(f"Test failed: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
