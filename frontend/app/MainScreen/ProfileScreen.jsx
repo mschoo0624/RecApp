@@ -64,7 +64,7 @@ export default function ProfileScreen({ route, navigation }) {
       if (!currentUser) return;
       
       const token = await currentUser.getIdToken();
-
+      // calling to get the friends lists.
       const response = await fetch(`${backendAPI}/friends/${userId}`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -74,7 +74,17 @@ export default function ProfileScreen({ route, navigation }) {
 
       if (!response.ok) throw new Error('Failed to fetch friends');
       const data = await response.json();
-      setFriends(data.friends || []);
+      // Fetch friend profiles using the IDs
+      const friendProfiles = await Promise.all(friendIds.map(async (id) => {
+        const docSnap = await getDoc(doc(db, "users", id));
+        if (docSnap.exists()) {
+          return { id, ...docSnap.data() };
+        }
+        return null;
+      }));
+
+      // Filter out any null results and set state
+      setFriends(friendProfiles.filter(Boolean));
     } catch (error) {
       console.error("Error fetching friends:", error);
       Alert.alert("Error", error.message || "Failed to load friends");
