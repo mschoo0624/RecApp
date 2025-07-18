@@ -1,7 +1,8 @@
 import firebase_admin  # Firebase Admin SDK for Python
 from firebase_admin import credentials, firestore  # Import credentials and Firestore client
 from google.cloud.firestore_v1.base_client import BaseClient  # Firestore base client (not always needed)
-from models import User, FriendRequest, FriendRequestResponse,FriendRequestAction  
+from models import User
+from google.cloud.firestore_v1.field_path import FieldPath
 from typing import Dict, Optional, List, Union  # Type hints for better code clarity
 import os  # For file path operations
 import logging  # For logging errors and info
@@ -191,6 +192,35 @@ def add_friendship(user1_id: str, user2_id: str) -> bool:
         logger.error(f"Error creating friendship: {e}")
         return False
 
+# Adding the remove friendships in the firebase database. 
+def remove_friends_from_lists(user1_id: str, user2_id: str) -> bool:
+    try:
+        batch = db.batch() 
+        user1_ref = db.collection("users").document(user1_id)
+        user2_ref = db.collection("users").document(user2_id)
+        
+        batch.update(user1_ref, {
+            "friends": firestore.ArrayRemove([user2_id]),
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+        batch.update(user2_ref, {
+            "friends": firestore.ArrayRemove([user1_id]),
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+        
+        batch.commit() # Removed the friendship correctly. 
+        user1_data = get_user_data(user1_id)
+        user1 = user1_data.fullName
+        
+        user2_data = get_user_data(user2_id)
+        user2 = user2_data.fullName
+        
+        logger.info(f"Successfully remove_friendship function between {user1} and {user2}")
+        return True
+    except Exception as e:
+        logger.error(f"Error removing friendship: {e}")
+        return False
+
 #Get pending friend requests for a user. 
 def get_pending_requests(user_id: str) -> List[Dict]:
     try:
@@ -235,20 +265,23 @@ def get_friends_list(user_id: str) -> List[Dict]:
         
         if not user_doc.exists:
             return []
-        
+
+        # Debugging to log the friends_ids just before the query.
+        logger.info(f"Friend IDs: {friends_ids}")
+
         # Checking the matching users.     
-        friends = user_doc.to_dict().get("friends", [])
-        if not friends:
+        friends_ids = user_doc.to_dict().get("friends", [])
+        if not friends_ids:
             return []
         
-        # Removed the photoURL for now. 
-        # .select(["fullName", "photoURL", "sports"])\
-        # Batch fetch friend profiles
-        friends_docs = db.collection("users")\
-                       .where(firestore.FieldPath.document_id(), "in", friends)\
-                       .select(["fullName", "sports"])\
-                       .stream()
-        logger.info("DEBUGGING: HELLO IT WORKED HEHE!!!")
+        friends_docs = db.collection("users").where(
+            FieldPath.document_id(), "in", friends_ids
+        ).stream()
+        
+        # For the debugging. 
+        for doc in friends_docs:
+            logger.info(f"Friend fetched: {doc.id} => {doc.to_dict()}")
+        
         return [{"id": doc.id, **doc.to_dict()} for doc in friends_docs]
     
     except Exception as e:

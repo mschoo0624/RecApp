@@ -20,7 +20,8 @@ from firebase_utils import (
     add_friendship,
     get_friend_request,  # Added this import.
     get_pending_requests,
-    get_friends_list
+    get_friends_list,
+    remove_friends_from_lists
 )
 
 # Configure logging with more detail
@@ -530,6 +531,15 @@ async def get_pending_requests_endpoint(user_id: str):  # Renamed to avoid confl
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get pending requests"
         )
+
+# Would change it to DELETE method later. 
+@app.post("/friends/remove")
+def remove_friend(user1_id: str, user2_id: str):
+    success = remove_friends_from_lists(user1_id, user2_id)
+    if success:
+        return {"message": f"Friendship removed between {user1_id} and {user2_id}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to remove friendship")
 
 # Showing the list of friends. 
 @app.get("/friends/{user_id}")
